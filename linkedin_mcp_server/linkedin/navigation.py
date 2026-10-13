@@ -164,6 +164,7 @@ class PageNavigator:
         carried into the retry lets a first attempt that timed out spend the
         same allowance a second time.
         """
+        await self._session.pace()
         page = self._session.page
         timeout_ms: float = self._GOTO_TIMEOUT_MS
         overall_ms: float | None = None

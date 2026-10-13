@@ -1461,7 +1461,9 @@ class TestADeadBrowserIsNoticedBeforeTheCall:
         else:
             await get_ready_extractor(None, tool_name="get_feed")
             assert manager.closes == 0
-            driver.extractor.assert_called_once_with(manager.page)
+            driver.extractor.assert_called_once_with(
+                manager.page, page_pause=(0.0, 0.0)
+            )
         assert len(driver.launched) == 1
 
 
@@ -1543,7 +1545,9 @@ class TestTheCloseDecidesTheAnswer:
             await get_ready_extractor(None, tool_name="get_feed")
             assert len(driver.launched) == 2
             assert driver.launched[1] is not manager
-            driver.extractor.assert_called_once_with(driver.launched[1].page)
+            driver.extractor.assert_called_once_with(
+                driver.launched[1].page, page_pause=(0.0, 0.0)
+            )
         else:
             with pytest.raises(BrowserBusyError):
                 await driver.drv.get_or_create_browser()
@@ -1665,7 +1669,9 @@ class TestABrowserAnotherCloseRetired:
             assert current is not stale and current.closes == 0
             assert replacement is None or current is replacement
             assert len(driver.launched) == 2
-            driver.extractor.assert_called_once_with(current.page)
+            driver.extractor.assert_called_once_with(
+                current.page, page_pause=(0.0, 0.0)
+            )
         else:
             with pytest.raises(ToolError) as raised:
                 await get_ready_extractor(None, tool_name="get_feed")
@@ -1711,7 +1717,7 @@ class TestABrowserAnotherCloseRetired:
         assert current is not stale and current.closes == 0
         assert len(driver.launched) == 2
         assert stale.closes == 1, "only the other closer may have closed it"
-        driver.extractor.assert_called_once_with(current.page)
+        driver.extractor.assert_called_once_with(current.page, page_pause=(0.0, 0.0))
         lease.release()
 
     async def test_the_reacquired_browser_is_not_checked_again(
@@ -1735,7 +1741,9 @@ class TestABrowserAnotherCloseRetired:
         await get_ready_extractor(None, tool_name="get_feed")
 
         assert len(handed_out) == 2
-        driver.extractor.assert_called_once_with(handed_out[1].page)
+        driver.extractor.assert_called_once_with(
+            handed_out[1].page, page_pause=(0.0, 0.0)
+        )
 
 
 @pytest.fixture
@@ -1916,7 +1924,9 @@ class TestACancelWaitsForTheProfile:
         if verdict:
             await follower
             assert len(driver.launched) == 2 and driver.launched[1] is not dead
-            driver.extractor.assert_called_once_with(driver.launched[1].page)
+            driver.extractor.assert_called_once_with(
+                driver.launched[1].page, page_pause=(0.0, 0.0)
+            )
         else:
             with pytest.raises(ToolError) as raised:
                 await follower

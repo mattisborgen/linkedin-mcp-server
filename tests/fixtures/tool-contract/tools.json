@@ -210,6 +210,39 @@
     "_meta": {
       "fastmcp": {
         "tags": [
+          "network"
+        ]
+      }
+    },
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "description": "List the authenticated user's most recently added connections, newest first.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "description": "How many connections to load (1-500, default 50). The list\nloads in batches, so the text may hold a few more.",
+          "maximum": 500,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_connections",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Get Connections"
+  },
+  {
+    "_meta": {
+      "fastmcp": {
+        "tags": [
           "messaging"
         ]
       }
@@ -547,6 +580,39 @@
       "type": "object"
     },
     "title": "Get Saved Jobs"
+  },
+  {
+    "_meta": {
+      "fastmcp": {
+        "tags": [
+          "network"
+        ]
+      }
+    },
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "description": "List the authenticated user's pending sent connection invitations, newest first.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 100,
+          "description": "How many invitations to load (1-500, default 100). The list\nloads in batches, so the text may hold a few more.",
+          "maximum": 500,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_sent_invitations",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Get Sent Invitations"
   },
   {
     "_meta": {

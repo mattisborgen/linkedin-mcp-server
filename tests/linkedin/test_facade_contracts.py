@@ -49,6 +49,7 @@ TOOL_DELEGATES = {
     "get_company_employees": "get_company_employees",
     "get_company_posts": "extract_page",
     "get_company_profile": "read_company",
+    "get_connections": "get_connections",
     "get_conversation": "get_conversation",
     "get_feed": "extract_feed",
     "get_inbox": "get_inbox",
@@ -57,6 +58,7 @@ TOOL_DELEGATES = {
     "get_my_profile": "get_my_profile",
     "get_person_profile": "read_person",
     "get_saved_jobs": "get_saved_jobs",
+    "get_sent_invitations": "get_sent_invitations",
     "get_sidebar_profiles": "get_sidebar_profiles",
     "search_companies": "search_companies",
     "search_conversations": "search_conversations",
@@ -100,6 +102,7 @@ async def test_constructor_export_and_dependency_use_the_same_facade(monkeypatch
         "_feed",
         "_jobs",
         "_message_sender",
+        "_network",
         "_person",
         "_posts",
     }

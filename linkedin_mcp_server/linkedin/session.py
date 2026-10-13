@@ -7,6 +7,7 @@ from typing import Any
 
 import asyncio
 import json
+import random
 import time
 
 from patchright.async_api import Page
@@ -43,6 +44,8 @@ class PageSession:
     """Immutable page adapter shared by every page workflow."""
 
     page: Page
+    # Bounds in seconds of the random pause before each page load; (0, 0) = none.
+    page_pause: tuple[float, float] = (0.0, 0.0)
 
     def monotonic(self) -> float:
         """Read the session clock."""
@@ -51,6 +54,12 @@ class PageSession:
     async def delay(self, seconds: float) -> None:
         """Pause through the session delay boundary."""
         await asyncio.sleep(seconds)
+
+    async def pace(self, fraction: float = 1.0) -> None:
+        """Pause a random time within ``page_pause``, scaled by *fraction*."""
+        low, high = self.page_pause
+        if high > 0:
+            await self.delay(random.uniform(low, high) * fraction)
 
     async def run_on_linkedin(self, script: str, arg: Any = _NO_ARGUMENT) -> Any:
         """Run a page *script* only in a LinkedIn document, and answer its result.

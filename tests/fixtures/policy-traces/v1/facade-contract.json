@@ -32,6 +32,10 @@
         "coroutine": true,
         "signature": "(self, company_name: 'str', keywords: 'str | None' = None) -> 'dict[str, Any]'"
       },
+      "get_connections": {
+        "coroutine": true,
+        "signature": "(self, limit: 'int' = 50) -> 'dict[str, Any]'"
+      },
       "get_conversation": {
         "coroutine": true,
         "signature": "(self, linkedin_username: 'str | None' = None, thread_id: 'str | None' = None, index: 'int' = 0) -> 'dict[str, Any]'"
@@ -55,6 +59,10 @@
       "get_saved_jobs": {
         "coroutine": true,
         "signature": "(self, max_pages: 'int' = 3, stage: 'JobsTrackerStage' = 'saved') -> 'dict[str, Any]'"
+      },
+      "get_sent_invitations": {
+        "coroutine": true,
+        "signature": "(self, limit: 'int' = 100) -> 'dict[str, Any]'"
       },
       "get_sidebar_profiles": {
         "coroutine": true,
@@ -102,11 +110,13 @@
       "extract_feed",
       "extract_page",
       "get_company_employees",
+      "get_connections",
       "get_conversation",
       "get_inbox",
       "get_job_apply_url",
       "get_my_profile",
       "get_saved_jobs",
+      "get_sent_invitations",
       "get_sidebar_profiles",
       "read_company",
       "read_job",
@@ -249,6 +259,25 @@
           "required": [
             "company_name"
           ],
+          "type": "object"
+        },
+        "output": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "get_connections": {
+        "input": {
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "default": 50,
+              "description": "How many connections to load (1-500, default 50). The list\nloads in batches, so the text may hold a few more.",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
           "type": "object"
         },
         "output": {
@@ -478,6 +507,25 @@
                 "archived"
               ],
               "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "output": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "get_sent_invitations": {
+        "input": {
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "default": 100,
+              "description": "How many invitations to load (1-500, default 100). The list\nloads in batches, so the text may hold a few more.",
+              "maximum": 500,
+              "minimum": 1,
+              "type": "integer"
             }
           },
           "type": "object"

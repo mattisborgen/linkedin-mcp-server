@@ -1,0 +1,157 @@
+{
+  "call": {
+    "arguments": {
+      "limit": 2
+    },
+    "method": "get_sent_invitations"
+  },
+  "events": [
+    {
+      "call": "get_sent_invitations",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.add",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "extra": {
+        "target_url": "https://www.linkedin.com/mynetwork/invitation-manager/sent/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-before-goto",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "navigate",
+      "landed_url": "https://www.linkedin.com/mynetwork/invitation-manager/sent/",
+      "requested_url": "https://www.linkedin.com/mynetwork/invitation-manager/sent/",
+      "section": "sent_invitations",
+      "timeout_ms": 30000,
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "call": "get_sent_invitations",
+      "description": "goto https://www.linkedin.com/mynetwork/invitation-manager/sent/",
+      "kind": "boundary.stabilize",
+      "result": null,
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "extra": {
+        "target_url": "https://www.linkedin.com/mynetwork/invitation-manager/sent/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-after-goto",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "boundary.auth_quick",
+      "result": null,
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.remove",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "boundary.rate_limit",
+      "section": "sent_invitations"
+    },
+    {
+      "arg": null,
+      "call": "get_sent_invitations",
+      "kind": "wait_for_function",
+      "operation": "network_profile_count",
+      "program_digest": "9fe28068782e",
+      "section": "sent_invitations",
+      "timeout_ms": 10000
+    },
+    {
+      "call": "get_sent_invitations",
+      "dismissed": false,
+      "kind": "boundary.modal",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "evaluate",
+      "operation": "network_profile_count",
+      "program_digest": "494ad4aa6aea",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "evaluate",
+      "operation": "network_scroll_lists",
+      "program_digest": "7fd9c80be8be",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "sleep",
+      "reason": "sleep",
+      "seconds": 0.25,
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "evaluate",
+      "operation": "network_profile_count",
+      "program_digest": "494ad4aa6aea",
+      "section": "sent_invitations"
+    },
+    {
+      "arg": {
+        "selectors": [
+          "main"
+        ]
+      },
+      "call": "get_sent_invitations",
+      "kind": "evaluate",
+      "operation": "root_content",
+      "program_digest": "e6b2be4ebddd",
+      "section": "sent_invitations"
+    },
+    {
+      "call": "get_sent_invitations",
+      "kind": "evaluate",
+      "operation": "network_profile_links",
+      "program_digest": "84ee7225fce3",
+      "section": "sent_invitations"
+    }
+  ],
+  "result": {
+    "references": {
+      "sent_invitations": [
+        {
+          "kind": "person",
+          "text": "Ada Lovelace",
+          "url": "/in/ada-lovelace/"
+        },
+        {
+          "kind": "person",
+          "url": "/in/charles-babbage/"
+        }
+      ]
+    },
+    "section_names": [
+      "sent_invitations"
+    ],
+    "sections": {
+      "sent_invitations": "Ada Lovelace\nAnalyst\n\nCharles Babbage\nEngineer"
+    },
+    "url": "https://www.linkedin.com/mynetwork/invitation-manager/sent/"
+  },
+  "scenario": "get_sent_invitations__baseline",
+  "schema_version": 1
+}

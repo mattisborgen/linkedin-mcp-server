@@ -14,6 +14,7 @@ from linkedin_mcp_server.bootstrap import (
     invalidate_auth_and_trigger_relogin,
     invalidate_browser_setup,
 )
+from linkedin_mcp_server.config import get_config
 from linkedin_mcp_server.core import BrowserManager
 from linkedin_mcp_server.core.exceptions import AuthenticationError, NetworkError
 from linkedin_mcp_server.drivers.browser import (
@@ -228,7 +229,11 @@ async def get_ready_extractor(
         if _browser_is_unusable(browser):
             browser = await _shut_down_unusable_browser(browser)
         await ensure_authenticated()
-        return LinkedInExtractor(browser.page)
+        pacing = get_config().browser
+        return LinkedInExtractor(
+            browser.page,
+            page_pause=(pacing.page_pause_min_seconds, pacing.page_pause_max_seconds),
+        )
     except AuthenticationError as e:
         # Boundary validation may run first, but no tool work has started here,
         # so the client may safely run the call again once it has signed in.

@@ -1060,6 +1060,36 @@ async def _conversation_row_resolution_scenario() -> dict[str, Any]:
     )
 
 
+async def _network_scenario(method: str, section: str) -> dict[str, Any]:
+    """A list that needs one scroll to reach its limit of two profiles."""
+    recorder = TraceRecorder(f"{method}__baseline", _COMMON_ALLOWED)
+    clock = FakeClock(recorder)
+    page = _page(recorder)
+    page.script("evaluate:network_profile_count", 1, 2)
+    page.script("evaluate:network_scroll_lists", True)
+    page.script(
+        "evaluate:root_content",
+        _root("Ada Lovelace\nAnalyst\n\nCharles Babbage\nEngineer"),
+    )
+    # The second card's link wraps only a photo, so it has no text.
+    page.script(
+        "evaluate:network_profile_links",
+        [
+            {"slug": "ada-lovelace", "text": "Ada Lovelace"},
+            {"slug": "charles-babbage", "text": ""},
+        ],
+    )
+    extractor = _extractor(page)
+    async with boundaries(recorder, clock):
+        with recorder.context(method, section):
+            result = await getattr(extractor, method)(limit=2)
+    page.assert_clean()
+    return recorder.trace(
+        {"method": method, "arguments": {"limit": 2}},
+        _complete_mapping_result(result, section_names=list(result["sections"])),
+    )
+
+
 async def _facade_contract_trace() -> dict[str, Any]:
     global _TOOL_SCHEMAS
 
@@ -1098,11 +1128,13 @@ TOOL_FACADE_METHODS = {
     "extract_feed",
     "extract_page",
     "get_company_employees",
+    "get_connections",
     "get_conversation",
     "get_inbox",
     "get_job_apply_url",
     "get_my_profile",
     "get_saved_jobs",
+    "get_sent_invitations",
     "get_sidebar_profiles",
     "read_company",
     "read_job",
@@ -1197,6 +1229,10 @@ async def build_policy_traces() -> dict[str, dict[str, Any]]:
         ),
         "conversation-row-resolution.json": (
             await _conversation_row_resolution_scenario()
+        ),
+        "connections.json": await _network_scenario("get_connections", "connections"),
+        "sent-invitations.json": await _network_scenario(
+            "get_sent_invitations", "sent_invitations"
         ),
     }
     return traces

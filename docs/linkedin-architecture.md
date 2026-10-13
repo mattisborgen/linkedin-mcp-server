@@ -34,6 +34,7 @@ a page-owning collaborator.
 | `link_metadata` | `JOB_PATH_RE`, `RawReference`, `Reference`, `ReferenceKind`, `build_references()`, `choose_reference_text()`, `classify_link()`, `clean_heading()`, `clean_label()`, `dedupe_references()`, `derive_context()`, `normalize_reference()`, `normalize_url()` | `browser-free` |
 | `message_sender` | `MessageSender` | `page-owning` |
 | `navigation` | `PageNavigator`, `WaitUntil` | `page-owning` |
+| `network` | `CONNECTIONS_URL`, `NetworkReader`, `SENT_INVITATIONS_URL` | `page-owning` |
 | `person` | `PersonReader` | `page-owning` |
 | `posts` | `PostSearch` | `browser-free` |
 | `profile_page` | `MessageTarget`, `MessageTargetResolution`, `ProfilePageReader`, `ReadMessageTarget` | `browser-free` |
@@ -51,7 +52,7 @@ a page-owning collaborator.
 - `content` -> `session`, `text`
 - `contracts` -> `identifiers`, `link_metadata`
 - `conversations` -> `content`, `identifiers`, `link_metadata`, `navigation`, `profile_page`, `session`, `text`
-- `extractor` -> `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `person`, `posts`, `profile_page`, `session`, `text`
+- `extractor` -> `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `network`, `person`, `posts`, `profile_page`, `session`, `text`
 - `feed` -> `content`, `contracts`, `feed_payload`, `navigation`, `session`, `text`
 - `feed_payload` -> `link_metadata`
 - `fields` -> `capture`
@@ -62,6 +63,7 @@ a page-owning collaborator.
 - `link_metadata` -> _(none)_
 - `message_sender` -> `contracts`, `identifiers`, `navigation`, `session`
 - `navigation` -> `session`
+- `network` -> `content`, `contracts`, `navigation`, `session`, `text`
 - `person` -> `capture`, `contracts`, `fields`, `identifiers`, `link_metadata`, `navigation`, `profile_page`, `search_urls`, `session`, `text`
 - `posts` -> `capture`, `contracts`, `link_metadata`, `search_urls`
 - `profile_page` -> `session`
@@ -76,12 +78,14 @@ a page-owning collaborator.
 - `extract_feed`
 - `extract_page`
 - `get_company_employees`
+- `get_connections`
 - `get_conversation`
 - `get_inbox`
 - `get_job_apply_url`
 - `get_my_profile`
 - `get_page_text`
 - `get_saved_jobs`
+- `get_sent_invitations`
 - `get_sidebar_profiles`
 - `read_company`
 - `read_job`
@@ -103,6 +107,7 @@ a page-owning collaborator.
 - `_feed`
 - `_jobs`
 - `_message_sender`
+- `_network`
 - `_person`
 - `_posts`
 

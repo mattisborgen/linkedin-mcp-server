@@ -23,6 +23,7 @@ from linkedin_mcp_server.linkedin.job_policy import JobsTrackerStage
 from linkedin_mcp_server.linkedin.jobs import JobReader
 from linkedin_mcp_server.linkedin.message_sender import MessageSender
 from linkedin_mcp_server.linkedin.navigation import PageNavigator
+from linkedin_mcp_server.linkedin.network import NetworkReader
 from linkedin_mcp_server.linkedin.person import PersonReader
 from linkedin_mcp_server.linkedin.posts import PostSearch
 from linkedin_mcp_server.linkedin.profile_page import ProfilePageReader
@@ -40,8 +41,8 @@ if TYPE_CHECKING:
 class LinkedInExtractor:
     """Compose page workflow owners and expose the stable tool-facing API."""
 
-    def __init__(self, page: Page):
-        session = PageSession(page)
+    def __init__(self, page: Page, *, page_pause: tuple[float, float] = (0.0, 0.0)):
+        session = PageSession(page, page_pause)
         navigator = PageNavigator(session)
         content = PageContentReader(session)
         capture = SectionCapture(session, navigator, content)
@@ -69,6 +70,7 @@ class LinkedInExtractor:
         self._conversations = ConversationReader(
             session, navigator, content, profile_page
         )
+        self._network = NetworkReader(session, navigator, content)
 
     async def get_page_text(self) -> str:
         """Extract innerText from the main content area of the current page."""
@@ -136,6 +138,14 @@ class LinkedInExtractor:
     async def get_sidebar_profiles(self, username: str) -> dict[str, Any]:
         """Extract profile links from sidebar sections on a profile page."""
         return await self._person.get_sidebar_profiles(username)
+
+    async def get_connections(self, limit: int = 50) -> dict[str, Any]:
+        """List the most recently added connections, newest first."""
+        return await self._network.get_connections(limit)
+
+    async def get_sent_invitations(self, limit: int = 100) -> dict[str, Any]:
+        """List pending sent invitations, newest first."""
+        return await self._network.get_sent_invitations(limit)
 
     async def read_company(
         self,

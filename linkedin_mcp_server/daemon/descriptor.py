@@ -120,6 +120,8 @@ SHARED_CONFIG_FIELDS = (
     "proxy_password",
     "proxy_bypass",
     "browser_idle_timeout_seconds",
+    "page_pause_min_seconds",
+    "page_pause_max_seconds",
 )
 
 

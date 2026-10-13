@@ -140,6 +140,8 @@ class EnvironmentKeys:
     BROWSER_WAIT = "BROWSER_WAIT"
     BROWSER_MIN_HOLD = "BROWSER_MIN_HOLD"
     BROWSER_IDLE_TIMEOUT = "BROWSER_IDLE_TIMEOUT"
+    PAGE_PAUSE_MIN = "PAGE_PAUSE_MIN"
+    PAGE_PAUSE_MAX = "PAGE_PAUSE_MAX"
     IMPORT_FROM_BROWSER = "IMPORT_FROM_BROWSER"
     AUTO_IMPORT_FROM_BROWSER = "AUTO_IMPORT_FROM_BROWSER"
     DAEMON_ENABLED = "DAEMON_ENABLED"
@@ -313,6 +315,8 @@ def load_from_env(config: AppConfig) -> AppConfig:
         (EnvironmentKeys.BROWSER_WAIT, "browser_wait_seconds"),
         (EnvironmentKeys.BROWSER_MIN_HOLD, "browser_min_hold_seconds"),
         (EnvironmentKeys.BROWSER_IDLE_TIMEOUT, "browser_idle_timeout_seconds"),
+        (EnvironmentKeys.PAGE_PAUSE_MIN, "page_pause_min_seconds"),
+        (EnvironmentKeys.PAGE_PAUSE_MAX, "page_pause_max_seconds"),
     ):
         raw = os.environ.get(env_key)
         if not raw:
@@ -569,6 +573,23 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
             "seconds without a tool call (default: 600; 0 = keep it open)"
         ),
     )
+    parser.add_argument(
+        "--page-pause-min",
+        type=non_negative_float,
+        default=None,
+        metavar="SECONDS",
+        help="Shortest random pause before each LinkedIn page load (default: 0)",
+    )
+    parser.add_argument(
+        "--page-pause-max",
+        type=non_negative_float,
+        default=None,
+        metavar="SECONDS",
+        help=(
+            "Longest random pause before each LinkedIn page load (default: 0; "
+            "0 and 0 = no pause)"
+        ),
+    )
 
     parser.add_argument(
         "--chrome-path",
@@ -791,6 +812,12 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
 
     if args.browser_idle_timeout is not None:
         config.browser.browser_idle_timeout_seconds = args.browser_idle_timeout
+
+    if args.page_pause_min is not None:
+        config.browser.page_pause_min_seconds = args.page_pause_min
+
+    if args.page_pause_max is not None:
+        config.browser.page_pause_max_seconds = args.page_pause_max
 
     if args.chrome_path:
         config.browser.chrome_path = args.chrome_path

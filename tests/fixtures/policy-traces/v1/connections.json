@@ -1,0 +1,157 @@
+{
+  "call": {
+    "arguments": {
+      "limit": 2
+    },
+    "method": "get_connections"
+  },
+  "events": [
+    {
+      "call": "get_connections",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.add",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "extra": {
+        "target_url": "https://www.linkedin.com/mynetwork/invite-connect/connections/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-before-goto",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "navigate",
+      "landed_url": "https://www.linkedin.com/mynetwork/invite-connect/connections/",
+      "requested_url": "https://www.linkedin.com/mynetwork/invite-connect/connections/",
+      "section": "connections",
+      "timeout_ms": 30000,
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "call": "get_connections",
+      "description": "goto https://www.linkedin.com/mynetwork/invite-connect/connections/",
+      "kind": "boundary.stabilize",
+      "result": null,
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "extra": {
+        "target_url": "https://www.linkedin.com/mynetwork/invite-connect/connections/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-after-goto",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "boundary.auth_quick",
+      "result": null,
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.remove",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "boundary.rate_limit",
+      "section": "connections"
+    },
+    {
+      "arg": null,
+      "call": "get_connections",
+      "kind": "wait_for_function",
+      "operation": "network_profile_count",
+      "program_digest": "9fe28068782e",
+      "section": "connections",
+      "timeout_ms": 10000
+    },
+    {
+      "call": "get_connections",
+      "dismissed": false,
+      "kind": "boundary.modal",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "evaluate",
+      "operation": "network_profile_count",
+      "program_digest": "494ad4aa6aea",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "evaluate",
+      "operation": "network_scroll_lists",
+      "program_digest": "7fd9c80be8be",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "sleep",
+      "reason": "sleep",
+      "seconds": 0.25,
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "evaluate",
+      "operation": "network_profile_count",
+      "program_digest": "494ad4aa6aea",
+      "section": "connections"
+    },
+    {
+      "arg": {
+        "selectors": [
+          "main"
+        ]
+      },
+      "call": "get_connections",
+      "kind": "evaluate",
+      "operation": "root_content",
+      "program_digest": "e6b2be4ebddd",
+      "section": "connections"
+    },
+    {
+      "call": "get_connections",
+      "kind": "evaluate",
+      "operation": "network_profile_links",
+      "program_digest": "84ee7225fce3",
+      "section": "connections"
+    }
+  ],
+  "result": {
+    "references": {
+      "connections": [
+        {
+          "kind": "person",
+          "text": "Ada Lovelace",
+          "url": "/in/ada-lovelace/"
+        },
+        {
+          "kind": "person",
+          "url": "/in/charles-babbage/"
+        }
+      ]
+    },
+    "section_names": [
+      "connections"
+    ],
+    "sections": {
+      "connections": "Ada Lovelace\nAnalyst\n\nCharles Babbage\nEngineer"
+    },
+    "url": "https://www.linkedin.com/mynetwork/invite-connect/connections/"
+  },
+  "scenario": "get_connections__baseline",
+  "schema_version": 1
+}
