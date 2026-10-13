@@ -32,8 +32,9 @@ if TYPE_CHECKING:
 #: Server settings an owner needs. Deliberately a short list rather than the
 #: whole section: transport, host, port and the one-shot flags all describe the
 #: *frontend's* invocation, and an owner that adopted them would try to run the
-#: client's transport or re-run its ``--login``.
-_SERVER_FIELDS = ("tool_timeout_seconds", "log_level")
+#: client's transport or re-run its ``--login``. ``read_only`` is here because
+#: the owner is the one serving the tools.
+_SERVER_FIELDS = ("tool_timeout_seconds", "log_level", "read_only")
 
 
 @dataclass(frozen=True)

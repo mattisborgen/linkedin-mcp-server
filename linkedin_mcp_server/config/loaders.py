@@ -145,6 +145,7 @@ class EnvironmentKeys:
     IMPORT_FROM_BROWSER = "IMPORT_FROM_BROWSER"
     AUTO_IMPORT_FROM_BROWSER = "AUTO_IMPORT_FROM_BROWSER"
     DAEMON_ENABLED = "DAEMON_ENABLED"
+    READ_ONLY = "READ_ONLY"
     INSTALLER_TEMP_DIR = "INSTALLER_TEMP_DIR"
 
 
@@ -429,6 +430,14 @@ def load_from_env(config: AppConfig) -> AppConfig:
             config.server.daemon_enabled = False
         elif daemon_value in TRUTHY_VALUES:
             config.server.daemon_enabled = True
+
+    # Serve no tool that writes to LinkedIn.
+    if read_only_env := os.environ.get(EnvironmentKeys.READ_ONLY):
+        read_only_value = _normalize_env(read_only_env)
+        if read_only_value in FALSY_VALUES:
+            config.server.read_only = False
+        elif read_only_value in TRUTHY_VALUES:
+            config.server.read_only = True
 
     return config
 
@@ -752,6 +761,16 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
         help="Give every stdio client its own browser (default; overrides DAEMON_ENABLED=true).",
     )
 
+    parser.add_argument(
+        "--read-only",
+        action="store_true",
+        default=None,
+        help=(
+            "Serve only tools that read LinkedIn, without connect_with_person "
+            "and send_message."
+        ),
+    )
+
     args = parser.parse_args(argv)
 
     # Update configuration with parsed arguments
@@ -863,6 +882,9 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
 
     if args.daemon_enabled is not None:
         config.server.daemon_enabled = args.daemon_enabled
+
+    if args.read_only:
+        config.server.read_only = True
 
     return config
 

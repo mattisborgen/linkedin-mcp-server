@@ -594,6 +594,8 @@ def config_fingerprint(config: AppConfig, *, key: str) -> str:
         for name in SHARED_CONFIG_FIELDS
     }
     material["tool_timeout_seconds"] = config.server.tool_timeout_seconds
+    # The owner serves the tools, so a read-only client needs a read-only owner.
+    material["read_only"] = config.server.read_only
     return hmac.new(
         key.encode("utf-8"), _canonical(material).encode("utf-8"), hashlib.sha256
     ).hexdigest()

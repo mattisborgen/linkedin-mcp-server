@@ -1193,6 +1193,120 @@ class TestBrowserLifespan:
         close_browser.assert_awaited_once()
 
 
+class TestReadOnly:
+    """A read-only server serves no tool that writes to LinkedIn."""
+
+    _WRITES = {"connect_with_person", "send_message"}
+
+    @staticmethod
+    def _recorded() -> set[str]:
+        contract = json.loads(_TOOL_CONTRACT.read_text(encoding="utf-8"))
+        return {tool["name"] for tool in contract}
+
+    @staticmethod
+    async def _served(server: FastMCP) -> set[str]:
+        return {tool["name"] for tool in await _wire_tools(server, *_HANDSHAKE)}
+
+    @pytest.mark.parametrize(
+        "role", [role for role in ServerRole if role.drives_browser]
+    )
+    async def test_the_tools_that_write_are_not_served(
+        self, monkeypatch: pytest.MonkeyPatch, role: ServerRole
+    ):
+        from linkedin_mcp_server.server_role import reset_process_role_for_testing
+
+        _stand_in_the_lifespan(monkeypatch)
+        reset_process_role_for_testing()
+        server = create_mcp_server(role=role, read_only=True, **_extras_for(role))
+
+        assert await self._served(server) == self._recorded() - self._WRITES
+
+    def test_every_tool_that_changes_linkedin_carries_the_write_tag(self):
+        # Read-only mode hides by tag, so a new tool that changes LinkedIn
+        # without the tag would stay served. Destructive and open-world is what
+        # the MCP annotations say about such a tool.
+        from linkedin_mcp_server.server import LINKEDIN_WRITE_TAG
+
+        contract = json.loads(_TOOL_CONTRACT.read_text(encoding="utf-8"))
+        changes_linkedin = {
+            tool["name"]
+            for tool in contract
+            if tool["annotations"].get("destructiveHint")
+            and tool["annotations"].get("openWorldHint")
+        }
+        tagged = {
+            tool["name"]
+            for tool in contract
+            if LINKEDIN_WRITE_TAG in tool["_meta"]["fastmcp"]["tags"]
+        }
+
+        assert changes_linkedin == tagged == self._WRITES
+
+    async def test_the_configured_setting_is_the_one_followed(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        # Neither entry point passes the flag: both install the configuration
+        # before building the server, and the server reads it from there.
+        from linkedin_mcp_server.config import set_config
+
+        _stand_in_the_lifespan(monkeypatch)
+        config = AppConfig()
+        config.server.read_only = True
+        set_config(config)
+
+        assert await self._served(create_mcp_server()) == (
+            self._recorded() - self._WRITES
+        )
+
+    async def test_a_tool_that_writes_cannot_be_called(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        from fastmcp.exceptions import ToolError
+
+        _stand_in_the_lifespan(monkeypatch)
+        ready = AsyncMock()
+        monkeypatch.setattr(
+            "linkedin_mcp_server.tools.messaging.get_ready_extractor", ready
+        )
+
+        async with Client(create_mcp_server(read_only=True)) as client:
+            with pytest.raises(ToolError, match="send_message"):
+                await client.call_tool(
+                    "send_message",
+                    {
+                        "linkedin_username": "ada-lovelace",
+                        "message": "Hello",
+                        "confirm_send": True,
+                    },
+                )
+
+        ready.assert_not_called()
+
+    async def test_a_read_only_proxy_hides_the_owners_tools_that_write(
+        self, monkeypatch: pytest.MonkeyPatch
+    ):
+        # The fingerprint keeps a read-only client off an owner that writes;
+        # this is the second line, for an owner that got through anyway.
+        from owner_hop import reach_owners_in_process
+
+        from linkedin_mcp_server.server_role import reset_process_role_for_testing
+
+        _stand_in_the_lifespan(monkeypatch)
+        reset_process_role_for_testing()
+        owner = create_mcp_server(role=ServerRole.OWNER, read_only=False)
+        reach_owners_in_process(monkeypatch, lambda _url: owner)
+        reset_process_role_for_testing()
+        proxy = create_mcp_server(
+            role=ServerRole.PROXY, proxy_backend=_a_backend(), read_only=True
+        )
+
+        assert await self._served(proxy) == self._recorded() - self._WRITES
+
+
+#: The era the tool contract fixture was recorded on.
+_HANDSHAKE = ("legacy", "2025-11-25")
+
+
 class TestServerVersion:
     def test_create_mcp_server_advertises_package_version(self):
         # Without an explicit version=, FastMCP advertises its own library

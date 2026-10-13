@@ -794,6 +794,28 @@ class TestLoaders:
         config = load_config([])
         assert config.server.daemon_enabled is False
 
+    def test_read_only_is_off_unless_asked_for(self):
+        from linkedin_mcp_server.config import load_config
+
+        assert load_config([]).server.read_only is False
+
+    @pytest.mark.parametrize(
+        ("value", "expected"),
+        [("false", False), ("true", True), ("0", False), ("1", True)],
+    )
+    def test_load_from_env_read_only(self, monkeypatch, value, expected):
+        monkeypatch.setenv("READ_ONLY", value)
+        from linkedin_mcp_server.config.loaders import load_from_env
+
+        config = load_from_env(AppConfig())
+        assert config.server.read_only is expected
+
+    def test_load_from_args_read_only(self):
+        from linkedin_mcp_server.config.loaders import load_from_args
+
+        config = load_from_args(AppConfig(), ["--read-only"])
+        assert config.server.read_only is True
+
     def test_load_from_env_port(self, monkeypatch):
         monkeypatch.setenv("PORT", "9000")
         from linkedin_mcp_server.config.loaders import load_from_env

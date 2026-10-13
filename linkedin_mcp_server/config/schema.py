@@ -436,6 +436,8 @@ class ServerConfig:
     # keep reading LinkedIn, and until then this stays something you opt into. Only
     # applies to stdio; an explicit HTTP bind is already a single server.
     daemon_enabled: bool = False
+    # Serve no tool that writes to LinkedIn (sends a message or an invitation).
+    read_only: bool = False
 
     def validate(self) -> None:
         """Validate server configuration values."""

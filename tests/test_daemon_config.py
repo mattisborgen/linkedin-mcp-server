@@ -191,6 +191,15 @@ class TestRoundTrip:
 
         assert restored.server.tool_timeout_seconds == 42.5
 
+    def test_read_only_crosses_because_the_owner_serves_the_tools(self):
+        original = AppConfig()
+        original.browser.user_data_dir = "~/p/profile"
+        original.server.read_only = True
+
+        restored = daemon_config.decode(daemon_config.encode(original))
+
+        assert restored.server.read_only is True
+
 
 class TestDaemonLogState:
     @pytest.mark.skipif(os.name == "nt", reason="POSIX permission bits are required")

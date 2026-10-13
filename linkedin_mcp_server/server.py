@@ -27,6 +27,7 @@ from linkedin_mcp_server.bootstrap import (
     start_background_browser_setup_if_needed,
     stop_background_browser_setup,
 )
+from linkedin_mcp_server.config import get_config
 from linkedin_mcp_server.config.schema import DEFAULT_TOOL_TIMEOUT_SECONDS
 from linkedin_mcp_server.drivers.browser import (
     close_browser,
@@ -56,6 +57,10 @@ if TYPE_CHECKING:
     from linkedin_mcp_server.daemon.proxy import DaemonProxyBackend
 
 logger = logging.getLogger(__name__)
+
+#: The tag on every tool that writes to LinkedIn: connect_with_person and
+#: send_message. A read-only server serves none of them.
+LINKEDIN_WRITE_TAG = "actions"
 
 
 class _StaticTokenAuth(TokenVerifier):
@@ -156,6 +161,7 @@ def create_mcp_server(
     auth_token: str | None = None,
     proxy_backend: "DaemonProxyBackend | None" = None,
     silent_owner: "Unanswered | None" = None,
+    read_only: bool | None = None,
 ) -> FastMCP:
     """Create and configure the MCP server with all LinkedIn tools.
 
@@ -176,6 +182,9 @@ def create_mcp_server(
 
     *silent_owner* is the shared owner a Direct server fell back from because
     it did not answer the election, named when the profile stays busy.
+
+    *read_only* hides every tool that writes to LinkedIn. ``None`` reads it
+    from the configuration, which both entry points install first.
     """
     if auth_token is not None and role is not ServerRole.OWNER:
         # A token on a stdio server protects nothing — there is no port to
@@ -322,5 +331,12 @@ def create_mcp_server(
                 }
             except Exception as e:
                 raise_tool_error(e, "close_session")  # NoReturn
+
+    if read_only is None:
+        read_only = get_config().server.read_only
+    if read_only:
+        # Hidden from the list and refused when called. Applied to a proxy as
+        # well, whose tools are the owner's and keep their tags.
+        mcp.disable(tags={LINKEDIN_WRITE_TAG})
 
     return mcp

@@ -1559,6 +1559,17 @@ class TestConfigFingerprint:
             _config(**{field: value}), key=token
         )
 
+    def test_a_read_only_client_does_not_match_an_owner_that_writes(self):
+        # The owner serves the tools, so attaching to one that is not read-only
+        # would hand a read-only client the tools that write to LinkedIn.
+        token = new_token()
+        read_only = _config()
+        read_only.server.read_only = True
+
+        assert config_fingerprint(_config(), key=token) != config_fingerprint(
+            read_only, key=token
+        )
+
     def test_configuration_that_only_affects_the_client_still_matches(self):
         # These describe how one client behaves, not what the browser is, so
         # they must not stop it attaching.
