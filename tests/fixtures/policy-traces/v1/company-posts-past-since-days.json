@@ -1,0 +1,123 @@
+{
+  "call": {
+    "arguments": {
+      "limit": 10,
+      "since_days": 30,
+      "source": "https://www.linkedin.com/company/analytical-engine/"
+    },
+    "method": "get_my_posts"
+  },
+  "events": [
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.add",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-before-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "navigate",
+      "landed_url": "https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true",
+      "requested_url": "https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true",
+      "section": "posts",
+      "timeout_ms": 30000,
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "call": "get_my_posts",
+      "description": "goto https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true",
+      "kind": "boundary.stabilize",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-after-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "boundary.auth_quick",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.remove",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "boundary.rate_limit",
+      "section": "posts"
+    },
+    {
+      "arg": null,
+      "call": "get_my_posts",
+      "kind": "wait_for_function",
+      "operation": "activity_posts_ready",
+      "program_digest": "27fa16dc2aa1",
+      "section": "posts",
+      "timeout_ms": 10000
+    },
+    {
+      "call": "get_my_posts",
+      "dismissed": false,
+      "kind": "boundary.modal",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "evaluate",
+      "operation": "activity_posts",
+      "program_digest": "9b6ef5618eee",
+      "section": "posts"
+    }
+  ],
+  "result": {
+    "posts": [
+      {
+        "published_at": "2026-10-10T00:00:00Z",
+        "text": "Launch",
+        "url": "/feed/update/urn:li:activity:7514474781081600007/",
+        "urn": "urn:li:activity:7514474781081600007"
+      }
+    ],
+    "references": {
+      "posts": [
+        {
+          "kind": "feed_post",
+          "text": "Launch",
+          "url": "/feed/update/urn:li:activity:7514474781081600007/"
+        }
+      ]
+    },
+    "section_names": [
+      "posts"
+    ],
+    "sections": {
+      "posts": "--- urn:li:activity:7514474781081600007 | published 2026-10-10T00:00:00Z ---\nLaunch"
+    },
+    "url": "https://www.linkedin.com/company/analytical-engine/posts/?feedView=all&viewAsMember=true"
+  },
+  "scenario": "get_my_posts__company_past_since_days",
+  "schema_version": 1
+}

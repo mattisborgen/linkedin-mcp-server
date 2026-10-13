@@ -430,6 +430,51 @@
     "_meta": {
       "fastmcp": {
         "tags": [
+          "network"
+        ]
+      }
+    },
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true
+    },
+    "description": "List recent posts and their stats, the user's own or a company page's, newest first.\n\nEach post's text is what LinkedIn renders: author, body (which may stop\nat \"see more\") and the counts it shows, such as reactions, comments,\nreposts and, on the user's own posts, impressions. Parse the counts\nfrom the text. Every entry in posts is {urn, url, published_at, text},\nwith published_at the UTC publish time decoded from the URN.",
+    "inputSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "limit": {
+          "default": 50,
+          "description": "Most posts to return (1-200, default 50).",
+          "maximum": 200,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "since_days": {
+          "default": 30,
+          "description": "Only posts published in the last this many days\n(1-365, default 30).",
+          "maximum": 365,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "source": {
+          "default": "personal",
+          "description": "\"personal\" (default) for the authenticated user's own posts,\nor a company's /company/ slug or URL (e.g. \"microsoft\") for that\npage's posts as a member sees them.",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "name": "get_my_posts",
+    "outputSchema": {
+      "additionalProperties": true,
+      "type": "object"
+    },
+    "title": "Get My Posts"
+  },
+  {
+    "_meta": {
+      "fastmcp": {
+        "tags": [
           "person"
         ]
       }

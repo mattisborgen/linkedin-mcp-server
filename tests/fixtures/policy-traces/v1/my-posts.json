@@ -1,0 +1,247 @@
+{
+  "call": {
+    "arguments": {
+      "limit": 2,
+      "since_days": 30,
+      "source": "personal"
+    },
+    "method": "get_my_posts"
+  },
+  "events": [
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.add",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/in/me/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-before-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "navigate",
+      "landed_url": "https://www.linkedin.com/in/ada-lovelace/",
+      "requested_url": "https://www.linkedin.com/in/me/",
+      "section": "posts",
+      "timeout_ms": 30000,
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "call": "get_my_posts",
+      "description": "goto https://www.linkedin.com/in/me/",
+      "kind": "boundary.stabilize",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/in/me/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-after-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "boundary.auth_quick",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-1",
+      "event": "framenavigated",
+      "kind": "listener.remove",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "sleep",
+      "reason": "sleep",
+      "seconds": 2.0,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-2",
+      "event": "framenavigated",
+      "kind": "listener.add",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-before-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "navigate",
+      "landed_url": "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/",
+      "requested_url": "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/",
+      "section": "posts",
+      "timeout_ms": 30000,
+      "wait_until": "domcontentloaded"
+    },
+    {
+      "call": "get_my_posts",
+      "description": "goto https://www.linkedin.com/in/ada-lovelace/recent-activity/all/",
+      "kind": "boundary.stabilize",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "extra": {
+        "target_url": "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/",
+        "wait_until": "domcontentloaded"
+      },
+      "kind": "boundary.trace",
+      "label": "extractor-after-goto",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "boundary.auth_quick",
+      "result": null,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "callback_id": "callback-2",
+      "event": "framenavigated",
+      "kind": "listener.remove",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "boundary.rate_limit",
+      "section": "posts"
+    },
+    {
+      "arg": null,
+      "call": "get_my_posts",
+      "kind": "wait_for_function",
+      "operation": "activity_posts_ready",
+      "program_digest": "27fa16dc2aa1",
+      "section": "posts",
+      "timeout_ms": 10000
+    },
+    {
+      "call": "get_my_posts",
+      "dismissed": false,
+      "kind": "boundary.modal",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "evaluate",
+      "operation": "activity_posts",
+      "program_digest": "9b6ef5618eee",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "locator.create",
+      "locator": "body",
+      "parent": null,
+      "section": "posts",
+      "selector": "body"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "locator.element_handle",
+      "locator": "body",
+      "section": "posts",
+      "timeout_ms": null
+    },
+    {
+      "call": "get_my_posts",
+      "handle": "body",
+      "kind": "handle.evaluate",
+      "operation": "owner_document_address",
+      "program_digest": "490b522c06a3",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "handle": "body",
+      "key": "End",
+      "kind": "handle.press",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "handle": "body",
+      "kind": "handle.dispose",
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "sleep",
+      "reason": "sleep",
+      "seconds": 0.25,
+      "section": "posts"
+    },
+    {
+      "call": "get_my_posts",
+      "kind": "evaluate",
+      "operation": "activity_posts",
+      "program_digest": "9b6ef5618eee",
+      "section": "posts"
+    }
+  ],
+  "result": {
+    "posts": [
+      {
+        "published_at": "2026-10-12T09:30:00Z",
+        "text": "Ada Lovelace\nNotes\n312 impressions",
+        "url": "/feed/update/urn:li:activity:7515343002009600007/",
+        "urn": "urn:li:activity:7515343002009600007"
+      },
+      {
+        "published_at": "2026-10-01T08:00:00Z",
+        "text": "Ada Lovelace\nEngine\n41 impressions",
+        "url": "/feed/update/urn:li:activity:7511334086246400007/",
+        "urn": "urn:li:activity:7511334086246400007"
+      }
+    ],
+    "references": {
+      "posts": [
+        {
+          "kind": "feed_post",
+          "text": "Ada Lovelace",
+          "url": "/feed/update/urn:li:activity:7515343002009600007/"
+        },
+        {
+          "kind": "feed_post",
+          "text": "Ada Lovelace",
+          "url": "/feed/update/urn:li:activity:7511334086246400007/"
+        }
+      ]
+    },
+    "section_names": [
+      "posts"
+    ],
+    "sections": {
+      "posts": "--- urn:li:activity:7515343002009600007 | published 2026-10-12T09:30:00Z ---\nAda Lovelace\nNotes\n312 impressions\n\n--- urn:li:activity:7511334086246400007 | published 2026-10-01T08:00:00Z ---\nAda Lovelace\nEngine\n41 impressions"
+    },
+    "url": "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/"
+  },
+  "scenario": "get_my_posts__personal",
+  "schema_version": 1
+}

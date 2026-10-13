@@ -55,6 +55,7 @@ TOOL_DELEGATES = {
     "get_inbox": "get_inbox",
     "get_job_apply_url": "get_job_apply_url",
     "get_job_details": "read_job",
+    "get_my_posts": "get_my_posts",
     "get_my_profile": "get_my_profile",
     "get_person_profile": "read_person",
     "get_saved_jobs": "get_saved_jobs",
@@ -94,6 +95,7 @@ async def test_constructor_export_and_dependency_use_the_same_facade(monkeypatch
     constructed = await dependencies.get_ready_extractor(None, tool_name="policy-test")
 
     expected_state = {
+        "_activity",
         "_capture",
         "_company",
         "_connection",

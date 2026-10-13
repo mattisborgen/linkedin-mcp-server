@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any
 from patchright.async_api import Page
 
 from linkedin_mcp_server.config.schema import DEFAULT_TOOL_TIMEOUT_SECONDS
+from linkedin_mcp_server.linkedin.activity import ActivityReader
 from linkedin_mcp_server.linkedin.capture import SectionCapture
 from linkedin_mcp_server.linkedin.company import CompanyReader
 from linkedin_mcp_server.linkedin.connection_actions import ConnectionActions
@@ -71,6 +72,9 @@ class LinkedInExtractor:
             session, navigator, content, profile_page
         )
         self._network = NetworkReader(session, navigator, content)
+        self._activity = ActivityReader(
+            session, navigator, lambda: person.resolve_own_username()
+        )
 
     async def get_page_text(self) -> str:
         """Extract innerText from the main content area of the current page."""
@@ -146,6 +150,12 @@ class LinkedInExtractor:
     async def get_sent_invitations(self, limit: int = 100) -> dict[str, Any]:
         """List pending sent invitations, newest first."""
         return await self._network.get_sent_invitations(limit)
+
+    async def get_my_posts(
+        self, source: str = "personal", since_days: int = 30, limit: int = 50
+    ) -> dict[str, Any]:
+        """List the user's own or a company page's recent posts, newest first."""
+        return await self._activity.get_my_posts(source, since_days, limit)
 
     async def read_company(
         self,

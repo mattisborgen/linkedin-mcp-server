@@ -58,6 +58,7 @@ class TestEveryNormalizedEntryPoint:
             ("get_company_employees", ("../../feed",), {}),
             ("read_job", ("../../feed",), {}),
             ("get_conversation", (), {"thread_id": "../../feed"}),
+            ("get_my_posts", ("../../feed",), {}),
         ],
     )
     async def test_refuses_a_traversal_value_before_navigating(

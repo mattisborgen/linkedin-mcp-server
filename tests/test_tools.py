@@ -42,6 +42,7 @@ def _make_mock_extractor(result: dict) -> MagicMock:
     mock.search_conversations = AsyncMock(return_value=result)
     mock.send_message = AsyncMock(return_value=result)
     mock.get_my_profile = AsyncMock(return_value=result)
+    mock.get_my_posts = AsyncMock(return_value=result)
     mock.search_companies = AsyncMock(return_value=result)
     mock.search_posts = AsyncMock(return_value=result)
     mock.get_company_employees = AsyncMock(return_value=result)
@@ -52,7 +53,7 @@ def _make_mock_extractor(result: dict) -> MagicMock:
     return mock
 
 
-_TOOL_MODULES = ("person", "company", "job", "messaging", "feed", "post")
+_TOOL_MODULES = ("person", "company", "job", "messaging", "network", "feed", "post")
 
 
 @pytest.fixture
@@ -192,6 +193,12 @@ def serve_extractor(monkeypatch: pytest.MonkeyPatch) -> Callable[[Any], AsyncMoc
             },
             "profile_urn is not a LinkedIn id",
         ),
+        (
+            "network",
+            "get_my_posts",
+            {"source": "/feed/"},
+            "not a company page",
+        ),
     ],
 )
 async def test_invalid_reference_is_rejected_before_extractor(
@@ -202,12 +209,14 @@ async def test_invalid_reference_is_rejected_before_extractor(
     from linkedin_mcp_server.tools.company import register_company_tools
     from linkedin_mcp_server.tools.job import register_job_tools
     from linkedin_mcp_server.tools.messaging import register_messaging_tools
+    from linkedin_mcp_server.tools.network import register_network_tools
     from linkedin_mcp_server.tools.person import register_person_tools
 
     register_by_module = {
         "company": register_company_tools,
         "job": register_job_tools,
         "messaging": register_messaging_tools,
+        "network": register_network_tools,
         "person": register_person_tools,
     }
     mcp = FastMCP("test")
@@ -243,6 +252,13 @@ async def test_invalid_reference_is_rejected_before_extractor(
             "messaging",
             "send_message",
             {"linkedin_username": "alice", "message": "Hello", "confirm_send": False},
+        ),
+        ("network", "get_my_posts", {}),
+        ("network", "get_my_posts", {"source": "Personal"}),
+        (
+            "network",
+            "get_my_posts",
+            {"source": "https://www.linkedin.com/company/acme/"},
         ),
         ("feed", "get_feed", {}),
         ("post", "search_posts", {"keywords": "python"}),
@@ -2015,6 +2031,43 @@ class TestMessagingTools:
                 True,
                 mock_context,
             )
+
+
+class TestGetMyPostsTool:
+    async def test_the_arguments_reach_the_extractor(
+        self, mock_context, serve_extractor
+    ):
+        expected = {"url": "u", "sections": {}, "posts": []}
+        mock_extractor = _make_mock_extractor(expected)
+
+        from linkedin_mcp_server.tools.network import register_network_tools
+
+        mcp = FastMCP("test")
+        register_network_tools(mcp)
+
+        serve_extractor(mock_extractor)
+        tool_fn = await get_tool_fn(mcp, "get_my_posts")
+        result = await tool_fn(mock_context, source="acme", since_days=7, limit=5)
+
+        assert result == expected
+        mock_extractor.get_my_posts.assert_awaited_once_with("acme", 7, 5)
+
+    @pytest.mark.parametrize(
+        ("field", "value"), [("since_days", 0), ("since_days", 366), ("limit", 201)]
+    )
+    async def test_out_of_range_numbers_are_refused(self, field: str, value: int):
+        # FastMCP wraps the pydantic error in its own ValidationError.
+        from fastmcp.exceptions import ValidationError
+
+        from linkedin_mcp_server.tools.network import register_network_tools
+
+        mcp = FastMCP("test")
+        register_network_tools(mcp)
+        ready = AsyncMock(side_effect=AssertionError("get_ready_extractor was called"))
+
+        with patch("linkedin_mcp_server.tools.network.get_ready_extractor", ready):
+            with pytest.raises(ValidationError, match=field):
+                await mcp.call_tool("get_my_posts", {field: value})
 
 
 class TestGetMyProfileTool:

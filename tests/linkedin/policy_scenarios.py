@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from difflib import unified_diff
 from pathlib import Path
+from datetime import UTC, datetime
 from typing import Any, cast
 from unittest.mock import patch
 
@@ -17,6 +18,7 @@ from patchright.async_api import Page
 from patchright.async_api import TimeoutError as PlaywrightTimeoutError
 
 from linkedin_mcp_server.callbacks import ProgressCallback
+from linkedin_mcp_server.linkedin import activity as activity_module
 from linkedin_mcp_server.linkedin import capture as capture_module
 from linkedin_mcp_server.linkedin import company as company_module
 from linkedin_mcp_server.linkedin import feed as feed_module
@@ -1090,6 +1092,79 @@ async def _network_scenario(method: str, section: str) -> dict[str, Any]:
     )
 
 
+_POSTS_NOW = datetime(2026, 10, 13, 12, 0, tzinfo=UTC)
+# The End key goes through a body handle checked to be in a LinkedIn document.
+_POSTS_ALLOWED = _COMMON_ALLOWED | {"locator.element_handle", "handle.press"}
+
+
+def _activity_post(published: datetime, text: str) -> dict[str, str]:
+    """A mounted post whose URN encodes *published*, as LinkedIn's ids do."""
+    milliseconds = int(published.timestamp() * 1000)
+    return {"urn": f"urn:li:activity:{milliseconds << 22 | 7}", "text": text}
+
+
+async def _my_posts_scenario() -> dict[str, Any]:
+    """The user's own feed, which needs one End press to reach its limit of two."""
+    recorder = TraceRecorder("get_my_posts__personal", _POSTS_ALLOWED)
+    clock = FakeClock(recorder)
+    page = _page(recorder)
+    page.goto_landings.append("https://www.linkedin.com/in/ada-lovelace/")
+    page.declare_locator("body", "body")
+    newest = _activity_post(
+        datetime(2026, 10, 12, 9, 30, tzinfo=UTC),
+        "Ada Lovelace\nNotes\n312 impressions",
+    )
+    older = _activity_post(
+        datetime(2026, 10, 1, 8, 0, tzinfo=UTC), "Ada Lovelace\nEngine\n41 impressions"
+    )
+    page.script("evaluate:activity_posts", [newest], [newest, older])
+    extractor = _extractor(page)
+    arguments = {"source": "personal", "since_days": 30, "limit": 2}
+    async with boundaries(recorder, clock):
+        with patch.object(activity_module, "_utc_now", lambda: _POSTS_NOW):
+            with recorder.context("get_my_posts", "posts"):
+                result = await extractor.get_my_posts(**arguments)
+    page.assert_clean()
+    return recorder.trace(
+        {"method": "get_my_posts", "arguments": arguments},
+        _complete_mapping_result(result, section_names=list(result["sections"])),
+    )
+
+
+async def _company_posts_scenario() -> dict[str, Any]:
+    """A company feed whose first batch already ends past the date limit.
+
+    The pinned post at the top is older than the limit too, and the last one
+    is what stops the read: no End press follows.
+    """
+    recorder = TraceRecorder("get_my_posts__company_past_since_days", _POSTS_ALLOWED)
+    clock = FakeClock(recorder)
+    page = _page(recorder)
+    page.script(
+        "evaluate:activity_posts",
+        [
+            _activity_post(datetime(2026, 6, 1, tzinfo=UTC), "Pinned"),
+            _activity_post(datetime(2026, 10, 10, tzinfo=UTC), "Launch"),
+            _activity_post(datetime(2026, 9, 1, tzinfo=UTC), "Old news"),
+        ],
+    )
+    extractor = _extractor(page)
+    arguments = {
+        "source": "https://www.linkedin.com/company/analytical-engine/",
+        "since_days": 30,
+        "limit": 10,
+    }
+    async with boundaries(recorder, clock):
+        with patch.object(activity_module, "_utc_now", lambda: _POSTS_NOW):
+            with recorder.context("get_my_posts", "posts"):
+                result = await extractor.get_my_posts(**arguments)
+    page.assert_clean()
+    return recorder.trace(
+        {"method": "get_my_posts", "arguments": arguments},
+        _complete_mapping_result(result, section_names=list(result["sections"])),
+    )
+
+
 async def _facade_contract_trace() -> dict[str, Any]:
     global _TOOL_SCHEMAS
 
@@ -1132,6 +1207,7 @@ TOOL_FACADE_METHODS = {
     "get_conversation",
     "get_inbox",
     "get_job_apply_url",
+    "get_my_posts",
     "get_my_profile",
     "get_saved_jobs",
     "get_sent_invitations",
@@ -1234,6 +1310,8 @@ async def build_policy_traces() -> dict[str, dict[str, Any]]:
         "sent-invitations.json": await _network_scenario(
             "get_sent_invitations", "sent_invitations"
         ),
+        "my-posts.json": await _my_posts_scenario(),
+        "company-posts-past-since-days.json": await _company_posts_scenario(),
     }
     return traces
 

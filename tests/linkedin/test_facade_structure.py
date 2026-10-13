@@ -39,6 +39,7 @@ PUBLIC_SIGNATURES = {
     "get_conversation": "(self, linkedin_username: 'str | None' = None, thread_id: 'str | None' = None, index: 'int' = 0) -> 'dict[str, Any]'",
     "get_inbox": "(self, limit: 'int' = 20) -> 'dict[str, Any]'",
     "get_job_apply_url": "(self, job_id: 'str') -> 'dict[str, Any]'",
+    "get_my_posts": "(self, source: 'str' = 'personal', since_days: 'int' = 30, limit: 'int' = 50) -> 'dict[str, Any]'",
     "get_my_profile": "(self, sections: 'set[str] | None' = None, callbacks: 'ProgressCallback | None' = None, max_scrolls: 'int | None' = None) -> 'dict[str, Any]'",
     "get_page_text": "(self) -> 'str'",
     "get_saved_jobs": "(self, max_pages: 'int' = 3, stage: 'JobsTrackerStage' = 'saved') -> 'dict[str, Any]'",
@@ -65,6 +66,7 @@ DELEGATES = {
     "get_conversation": ("_conversations", "get_conversation"),
     "get_inbox": ("_conversations", "get_inbox"),
     "get_job_apply_url": ("_jobs", "get_job_apply_url"),
+    "get_my_posts": ("_activity", "get_my_posts"),
     "get_my_profile": ("_person", "get_my_profile"),
     "get_page_text": ("_content", "get_page_text"),
     "get_saved_jobs": ("_jobs", "get_saved_jobs"),
@@ -91,6 +93,7 @@ DELEGATE_CALLS = {
     "get_conversation": "self._conversations.get_conversation(linkedin_username, thread_id, index)",
     "get_inbox": "self._conversations.get_inbox(limit)",
     "get_job_apply_url": "self._jobs.get_job_apply_url(job_id)",
+    "get_my_posts": "self._activity.get_my_posts(source, since_days, limit)",
     "get_my_profile": "self._person.get_my_profile(sections, callbacks, max_scrolls)",
     "get_page_text": "self._content.get_page_text()",
     "get_saved_jobs": "self._jobs.get_saved_jobs(max_pages, stage)",
@@ -108,6 +111,7 @@ DELEGATE_CALLS = {
 }
 
 FACADE_STATE = {
+    "_activity",
     "_capture",
     "_company",
     "_connection",

@@ -1,8 +1,9 @@
 """
 LinkedIn network reading tools.
 
-Read the authenticated user's own connections and pending sent invitations.
-Both are read-only; withdrawing an invitation is not offered.
+Read the authenticated user's own connections, pending sent invitations and
+recent posts, or a company page's posts. All are read-only; withdrawing an
+invitation is not offered.
 """
 
 import logging
@@ -15,6 +16,7 @@ from linkedin_mcp_server.config.schema import DEFAULT_TOOL_TIMEOUT_SECONDS
 from linkedin_mcp_server.core.exceptions import AuthenticationError
 from linkedin_mcp_server.dependencies import get_ready_extractor, handle_auth_error
 from linkedin_mcp_server.error_handler import raise_tool_error
+from linkedin_mcp_server.linkedin.activity import normalize_posts_source
 
 logger = logging.getLogger(__name__)
 
@@ -108,3 +110,59 @@ def register_network_tools(
                 raise_tool_error(relogin_exc, "get_sent_invitations")
         except Exception as e:
             raise_tool_error(e, "get_sent_invitations")  # NoReturn
+
+    @mcp.tool(
+        timeout=tool_timeout,
+        title="Get My Posts",
+        annotations={"readOnlyHint": True, "openWorldHint": True},
+        tags={"network"},
+    )
+    async def get_my_posts(
+        ctx: Context,
+        source: str = "personal",
+        since_days: Annotated[int, Field(ge=1, le=365)] = 30,
+        limit: Annotated[int, Field(ge=1, le=200)] = 50,
+    ) -> dict[str, Any]:
+        """
+        List recent posts and their stats, the user's own or a company page's, newest first.
+
+        Each post's text is what LinkedIn renders: author, body (which may stop
+        at "see more") and the counts it shows, such as reactions, comments,
+        reposts and, on the user's own posts, impressions. Parse the counts
+        from the text. Every entry in posts is {urn, url, published_at, text},
+        with published_at the UTC publish time decoded from the URN.
+
+        Args:
+            ctx: FastMCP context for progress reporting
+            source: "personal" (default) for the authenticated user's own posts,
+                or a company's /company/ slug or URL (e.g. "microsoft") for that
+                page's posts as a member sees them.
+            since_days: Only posts published in the last this many days
+                (1-365, default 30).
+            limit: Most posts to return (1-200, default 50).
+
+        Returns:
+            Dict with url, sections["posts"] (each post's text under a
+            "--- <urn> | published <published_at> ---" line),
+            references["posts"] ({kind: "feed_post", url: "/feed/update/<urn>/",
+            text: first line}) and posts, newest first. section_errors["posts"]
+            is set when the page showed no posts at all.
+        """
+        try:
+            # Validate before starting the browser.
+            normalize_posts_source(source)
+            extractor = await get_ready_extractor(ctx, tool_name="get_my_posts")
+            logger.info(
+                "Reading posts: %s (since_days=%d, limit=%d)", source, since_days, limit
+            )
+            await ctx.report_progress(progress=0, total=100, message="Reading posts")
+            result = await extractor.get_my_posts(source, since_days, limit)
+            await ctx.report_progress(progress=100, total=100, message="Complete")
+            return result
+        except AuthenticationError as e:
+            try:
+                await handle_auth_error(e, ctx)
+            except Exception as relogin_exc:
+                raise_tool_error(relogin_exc, "get_my_posts")
+        except Exception as e:
+            raise_tool_error(e, "get_my_posts")  # NoReturn

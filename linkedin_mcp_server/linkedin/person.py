@@ -361,11 +361,7 @@ class PersonReader:
         Returns:
             {url, sections: {name: text}}
         """
-        await self._navigator._navigate_to_page("https://www.linkedin.com/in/me/")
-        real_url = self._session.page.url  # post-redirect, e.g. /in/johndoe/
-        match = re.search(r"/in/([^/?#]+)", real_url)
-        username = match.group(1) if match else "me"
-        logger.debug("get_my_profile resolved username=%r from %s", username, real_url)
+        username = await self.resolve_own_username()
 
         return await self.read_person(
             username,
@@ -378,6 +374,20 @@ class PersonReader:
             # nowhere else.
             allow_self_alias=True,
         )
+
+    async def resolve_own_username(self) -> str:
+        """Navigate to /in/me/ and read the signed-in member's identifier.
+
+        LinkedIn redirects the alias to the member's own profile, so the
+        identifier is read from the address the page lands on. Leaves the
+        page on that profile, and answers "me" when it did not redirect.
+        """
+        await self._navigator._navigate_to_page("https://www.linkedin.com/in/me/")
+        real_url = self._session.page.url  # post-redirect, e.g. /in/johndoe/
+        match = re.search(r"/in/([^/?#]+)", real_url)
+        username = match.group(1) if match else "me"
+        logger.debug("Resolved own username=%r from %s", username, real_url)
+        return username
 
     async def get_sidebar_profiles(self, username: str) -> dict[str, Any]:
         """Extract profile links from sidebar sections on a LinkedIn profile page.

@@ -48,6 +48,10 @@
         "coroutine": true,
         "signature": "(self, job_id: 'str') -> 'dict[str, Any]'"
       },
+      "get_my_posts": {
+        "coroutine": true,
+        "signature": "(self, source: 'str' = 'personal', since_days: 'int' = 30, limit: 'int' = 50) -> 'dict[str, Any]'"
+      },
       "get_my_profile": {
         "coroutine": true,
         "signature": "(self, sections: 'set[str] | None' = None, callbacks: 'ProgressCallback | None' = None, max_scrolls: 'int | None' = None) -> 'dict[str, Any]'"
@@ -114,6 +118,7 @@
       "get_conversation",
       "get_inbox",
       "get_job_apply_url",
+      "get_my_posts",
       "get_my_profile",
       "get_saved_jobs",
       "get_sent_invitations",
@@ -396,6 +401,37 @@
           "required": [
             "job_id"
           ],
+          "type": "object"
+        },
+        "output": {
+          "additionalProperties": true,
+          "type": "object"
+        }
+      },
+      "get_my_posts": {
+        "input": {
+          "additionalProperties": false,
+          "properties": {
+            "limit": {
+              "default": 50,
+              "description": "Most posts to return (1-200, default 50).",
+              "maximum": 200,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "since_days": {
+              "default": 30,
+              "description": "Only posts published in the last this many days\n(1-365, default 30).",
+              "maximum": 365,
+              "minimum": 1,
+              "type": "integer"
+            },
+            "source": {
+              "default": "personal",
+              "description": "\"personal\" (default) for the authenticated user's own posts,\nor a company's /company/ slug or URL (e.g. \"microsoft\") for that\npage's posts as a member sees them.",
+              "type": "string"
+            }
+          },
           "type": "object"
         },
         "output": {

@@ -16,6 +16,7 @@ a page-owning collaborator.
 | Module | Canonical public owners | Source classification |
 | --- | --- | --- |
 | `__init__` | _(no public definitions)_ | `browser-free` |
+| `activity` | `ActivityReader`, `COMPANY_POSTS_SUFFIX`, `PERSONAL_SOURCE`, `ResolveOwnUsername`, `activity_published_at()`, `normalize_posts_source()` | `page-owning` |
 | `capture` | `CaptureMode`, `CapturePlan`, `OverlayRootNotFoundError`, `RATE_LIMIT_RETRY_DELAY`, `SectionCapture`, `capture_plan_for_url()` | `page-owning` |
 | `company` | `CompanyReader` | `browser-free` |
 | `connection` | `ActionSignals`, `ConnectionState`, `detect_connection_state()` | `browser-free` |
@@ -45,6 +46,7 @@ a page-owning collaborator.
 ## Internal import graph
 
 - `__init__` -> `extractor`, `fields`
+- `activity` -> `identifiers`, `link_metadata`, `navigation`, `session`
 - `capture` -> `content`, `contracts`, `feed_payload`, `link_metadata`, `navigation`, `session`, `text`
 - `company` -> `capture`, `contracts`, `fields`, `identifiers`, `link_metadata`, `search_urls`, `session`
 - `connection` -> _(none)_
@@ -52,7 +54,7 @@ a page-owning collaborator.
 - `content` -> `session`, `text`
 - `contracts` -> `identifiers`, `link_metadata`
 - `conversations` -> `content`, `identifiers`, `link_metadata`, `navigation`, `profile_page`, `session`, `text`
-- `extractor` -> `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `network`, `person`, `posts`, `profile_page`, `session`, `text`
+- `extractor` -> `activity`, `capture`, `company`, `connection_actions`, `content`, `contracts`, `conversations`, `feed`, `job_pages`, `job_policy`, `jobs`, `message_sender`, `navigation`, `network`, `person`, `posts`, `profile_page`, `session`, `text`
 - `feed` -> `content`, `contracts`, `feed_payload`, `navigation`, `session`, `text`
 - `feed_payload` -> `link_metadata`
 - `fields` -> `capture`
@@ -82,6 +84,7 @@ a page-owning collaborator.
 - `get_conversation`
 - `get_inbox`
 - `get_job_apply_url`
+- `get_my_posts`
 - `get_my_profile`
 - `get_page_text`
 - `get_saved_jobs`
@@ -99,6 +102,7 @@ a page-owning collaborator.
 
 ## `LinkedInExtractor` construction-state allowlist
 
+- `_activity`
 - `_capture`
 - `_company`
 - `_connection`

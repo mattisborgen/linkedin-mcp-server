@@ -304,6 +304,9 @@ class ScriptedHandle:
     async def click(self, *, timeout: int | None = None) -> None:
         await self._action("click", timeout_ms=timeout)
 
+    async def press(self, key: str) -> None:
+        await self._action("press", key=key)
+
     async def inner_text(self) -> str:
         return str(await self._action("inner_text"))
 
@@ -700,6 +703,8 @@ def semantic_program_id(program: str) -> str:
         ("linksOnlyTo", "network_profile_links"),
         ("return slugs.size;", "network_profile_count"),
         ("element.scrollTop = element.scrollHeight", "network_scroll_lists"),
+        ("""urn:li:activity:"]') !== null""", "activity_posts_ready"),
+        ("element.parentElement.closest(selector)", "activity_posts"),
         ("isScrollable", "scroll_main_region"),
         ("jobs-search-pagination__page-state", "job_total_pages"),
         ("artdeco-pagination__pages", "saved_job_total_pages"),
