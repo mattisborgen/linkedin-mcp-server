@@ -46,6 +46,11 @@ logger = logging.getLogger(__name__)
 #: https://github.com/Kaliiiiiiiiii-Vinyzu/patchright/discussions/232
 ATTACH_TO_OTHER = "PW_CHROMIUM_ATTACH_TO_OTHER"
 
+#: Debug switch: use Chromium's own headless mode on macOS too. No window ever
+#: opens, and every page announces ``HeadlessChrome``, so it suits runs that
+#: never reach LinkedIn, such as the test suite on a developer's desktop.
+CHROMIUM_HEADLESS_ENV = "LINKEDIN_DEBUG_CHROMIUM_HEADLESS"
+
 #: How long to wait for the created target to surface as a Page. Generous: this
 #: is a local round trip, and the failure it guards is a hang rather than a slow
 #: machine.
@@ -79,6 +84,13 @@ def hidden_target_is_supported() -> bool:
     and there is nothing to hide. That is the container's path, and it belongs
     with the change that gives the container a display.
     """
+    if os.getenv(CHROMIUM_HEADLESS_ENV, "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }:
+        return False
     return sys.platform == "darwin"
 
 

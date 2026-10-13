@@ -140,6 +140,42 @@ def ignore_the_developers_environment(monkeypatch):
         monkeypatch.delenv(key, raising=False)
 
 
+def _refuse_a_window(launch):
+    async def windowless(self, *args, **kwargs):
+        if kwargs.get("headless") is False:
+            raise RuntimeError(
+                f"a test asked {launch.__name__}() for a visible browser window, "
+                "which local macOS runs refuse (tests/conftest.py)"
+            )
+        return await launch(self, *args, **kwargs)
+
+    return windowless
+
+
+@pytest.fixture(autouse=True)
+def no_browser_window_on_the_desktop(ignore_the_developers_environment, monkeypatch):
+    """Keep every browser a local macOS run starts off the developer's screen.
+
+    The server's headless mode on macOS is a real window it hides, and that
+    window shows for about half a second on every start (``hidden_target``). No
+    test reaches LinkedIn, so Chromium's own headless mode costs nothing here.
+    The switch is inherited by the processes tests start, and a headed launch in
+    this process fails instead of opening a window. CI keeps the real modes,
+    which the identity rows measure.
+    """
+    if sys.platform != "darwin" or os.environ.get("CI"):
+        return
+    from patchright.async_api import BrowserType
+
+    from linkedin_mcp_server.hidden_target import CHROMIUM_HEADLESS_ENV
+
+    monkeypatch.setenv(CHROMIUM_HEADLESS_ENV, "1")
+    for name in ("launch", "launch_persistent_context"):
+        monkeypatch.setattr(
+            BrowserType, name, _refuse_a_window(getattr(BrowserType, name))
+        )
+
+
 @pytest.fixture(autouse=True)
 def isolate_profile_dir(ignore_the_developers_environment, tmp_path, monkeypatch):
     """Redirect profile directory to tmp_path via config and DEFAULT_PROFILE_DIR.

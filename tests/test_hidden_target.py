@@ -17,6 +17,7 @@ import pytest
 
 from linkedin_mcp_server.hidden_target import (
     ATTACH_TO_OTHER,
+    CHROMIUM_HEADLESS_ENV,
     HiddenTargetError,
     attaching_to_other_targets,
     hidden_target_is_supported,
@@ -269,8 +270,15 @@ class TestPlatformSupport:
 
     def test_macos_is_supported(self, monkeypatch):
         monkeypatch.setattr("sys.platform", "darwin")
+        monkeypatch.delenv(CHROMIUM_HEADLESS_ENV, raising=False)
 
         assert hidden_target_is_supported() is True
+
+    def test_the_debug_switch_turns_it_off_on_macos(self, monkeypatch):
+        monkeypatch.setattr("sys.platform", "darwin")
+        monkeypatch.setenv(CHROMIUM_HEADLESS_ENV, "1")
+
+        assert hidden_target_is_supported() is False
 
     def test_linux_is_not(self, monkeypatch):
         """Measured in the container image: with a display, closing the startup
