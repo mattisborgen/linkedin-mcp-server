@@ -60,6 +60,8 @@ Use code <strong>FOUNDING20</strong> for 20% off your first year. <a href="https
 | `get_my_profile` | Read your own profile, with the same section selection as other profiles. |
 | `connect_with_person` | Send a connection request with an optional note, or accept an incoming one. |
 | `get_sidebar_profiles` | Find recommended profile links, including people you may know. |
+| `get_connections` | List your most recently added connections, newest first, with the date each one connected. |
+| `get_sent_invitations` | List your pending sent invitations, newest first, with how long ago each was sent. |
 | `get_inbox` | List recent inbox conversations, with links to open individual threads. |
 | `get_conversation` | Read a conversation's messages using a LinkedIn username or thread ID. |
 | `search_conversations` | Search messages by keyword and return links to matching conversation threads. |
@@ -74,6 +76,7 @@ Use code <strong>FOUNDING20</strong> for 20% off your first year. <a href="https
 | `get_job_details` | Read a job posting's description, requirements, and company details. |
 | `get_job_apply_url` | Check whether a job uses Easy Apply or links to an employer's application. |
 | `get_feed` | Read recent posts from your home feed, with links to the original posts. |
+| `get_my_posts` | List your own or a company page's recent posts with their publish times and the counts LinkedIn shows, such as impressions and reactions. |
 | `search_posts` | Search posts by keyword, optionally limited to the past day, week, or month. |
 | `close_session` | Close the shared browser session without deleting your saved login. |
 
@@ -158,6 +161,11 @@ AI agent? Get a quick confirmation from the user before enabling automatic updat
 - `--no-headless` - Show the browser window (useful for debugging)
 - `--chrome-path PATH` - Path to a Chrome/Chromium executable
 - `--proxy-server URL` - Route browser traffic through a proxy, as `scheme://host:port`. Set it up **before** `--login`; see [Using a proxy](#using-a-proxy).
+
+**Pacing and tools:**
+
+- `--page-pause-min SECONDS` / `--page-pause-max SECONDS` - Wait a random time between these bounds before every LinkedIn page load and every scroll, key press or "show more" click that loads more, retries included (default: 0 and 0, no pause). For example `--page-pause-min 2 --page-pause-max 4`. A paced call takes longer, so raise `--tool-timeout` for large list limits.
+- `--read-only` - Serve only the tools that read LinkedIn: `connect_with_person` and `send_message` are not offered, and are refused if called. Reading a conversation can still mark it read on LinkedIn.
 
 **Other:**
 
@@ -534,6 +542,11 @@ username.
 - `--chrome-path PATH` - Path to a Chrome/Chromium executable (rarely needed in Docker)
 - `--proxy-server URL` - Route browser traffic through a proxy, as `scheme://host:port`. Set it up **before** `--login`; see [Using a proxy](#using-a-proxy).
 
+**Pacing and tools:**
+
+- `--page-pause-min SECONDS` / `--page-pause-max SECONDS` - Wait a random time between these bounds before every LinkedIn page load and every scroll, key press or "show more" click that loads more, retries included (default: 0 and 0, no pause). For example `--page-pause-min 2 --page-pause-max 4`. A paced call takes longer, so raise `--tool-timeout` for large list limits.
+- `--read-only` - Serve only the tools that read LinkedIn: `connect_with_person` and `send_message` are not offered, and are refused if called. Reading a conversation can still mark it read on LinkedIn.
+
 **Other:**
 
 - `--log-level {DEBUG,INFO,WARNING,ERROR}` - Logging level (default: WARNING)
@@ -808,6 +821,11 @@ uv run -m linkedin_mcp_server
 - `--chrome-path PATH` - Path to a Chrome/Chromium executable
 - `--installer-temp-dir PATH` - Existing directory for browser installation temporary files (environment: `INSTALLER_TEMP_DIR`).
 - `--proxy-server URL` - Route browser traffic through a proxy, as `scheme://host:port`. Set it up **before** `--login`; see [Using a proxy](#using-a-proxy).
+
+**Pacing and tools:**
+
+- `--page-pause-min SECONDS` / `--page-pause-max SECONDS` - Wait a random time between these bounds before every LinkedIn page load and every scroll, key press or "show more" click that loads more, retries included (default: 0 and 0, no pause). For example `--page-pause-min 2 --page-pause-max 4`. A paced call takes longer, so raise `--tool-timeout` for large list limits.
+- `--read-only` - Serve only the tools that read LinkedIn: `connect_with_person` and `send_message` are not offered, and are refused if called. Reading a conversation can still mark it read on LinkedIn.
 
 **Other:**
 

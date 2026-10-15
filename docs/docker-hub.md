@@ -10,6 +10,7 @@ A Model Context Protocol (MCP) server that connects AI assistants to LinkedIn. A
 - **Own Profile**: Fetch the authenticated user's own profile to give agents self-context
 - **Profile Connections**: Send connection requests or accept incoming ones, with optional notes
 - **Sidebar Profiles**: Extract profile URLs from the sidebar recommendation sections on a profile page ("More profiles for you", "Explore premium profiles", "People you may know")
+- **Network Lists**: List the authenticated user's most recently added connections and pending sent invitations, newest first, with their dates
 - **Messaging**: List the inbox, read a conversation by username or thread ID, search messages by keyword, and compose/send a new message with explicit confirmation (profile-based send may open a separate DM rather than reply in an existing thread)
 - **Company Profiles**: Extract comprehensive company data, including the LinkedIn company URN id (used by LinkedIn's people-search `currentCompany` URL facet)
 - **Company Employees**: List employees at a company with optional keyword filtering
@@ -21,6 +22,7 @@ A Model Context Protocol (MCP) server that connects AI assistants to LinkedIn. A
 - **Person Posts**: Get recent activity/posts from a person's profile
 - **Company Posts**: Get recent posts from a company's LinkedIn feed
 - **Home Feed**: Get recent posts from the authenticated user's LinkedIn home feed
+- **Post Stats**: List the authenticated user's own or a company page's recent posts with their publish times and the counts LinkedIn shows
 - **Post Search**: Search posts/content globally by keyword (the "Posts" tab) with an optional recency filter
 - **Compact References**: Return typed per-section links alongside readable text without shipping full-page markdown
 
@@ -131,6 +133,9 @@ Use `$env:USERPROFILE\.linkedin-mcp` when constructing the host path outside JSO
 | `BROWSER_WAIT` | `25` | How long to wait for another server process to hand over the shared browser, in seconds (max 45; `0` = report busy at once). |
 | `BROWSER_MIN_HOLD` | `20` | Shortest time a process keeps the shared browser before handing it over, in seconds. Clamped to 3 seconds below `BROWSER_WAIT`, so raise that one along with it. Higher means fewer browser restarts but longer waits for other clients. |
 | `BROWSER_IDLE_TIMEOUT` | `600` | Close an idle browser and release the profile after this many seconds without a tool call (`0` = keep it open). |
+| `PAGE_PAUSE_MIN` | `0` | Shortest random pause, in seconds, before every LinkedIn page load and every scroll, key press or "show more" click that loads more, retries included. |
+| `PAGE_PAUSE_MAX` | `0` | Longest such pause, in seconds (`0` and `0` = no pause). For example `2` and `4`. A paced call takes longer, so raise `TOOL_TIMEOUT` for large list limits. |
+| `READ_ONLY` | `false` | Serve only the tools that read LinkedIn: `connect_with_person` and `send_message` are not offered, and are refused if called. Reading a conversation can still mark it read on LinkedIn. |
 | `AUTO_IMPORT_FROM_BROWSER` | on | Import a session from a signed-in local browser on the first tool call that needs one. Skipped in containers, which have no host browser or keychain. |
 | `TRANSPORT` | `stdio` | Transport mode: stdio, streamable-http |
 | `HOST` | `127.0.0.1` | HTTP server host (for streamable-http transport) |
