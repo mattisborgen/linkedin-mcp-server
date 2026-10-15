@@ -140,6 +140,17 @@ def ignore_the_developers_environment(monkeypatch):
         monkeypatch.delenv(key, raising=False)
 
 
+def running_in_ci() -> bool:
+    """Whether ``CI`` says this is a CI run, read as a boolean.
+
+    Not as presence: ``CI=false`` or ``CI=0`` in a developer's shell would
+    otherwise turn off the window guard below on exactly the machine it is for.
+    """
+    from linkedin_mcp_server.config.loaders import TRUTHY_VALUES
+
+    return os.environ.get("CI", "").strip().lower() in TRUTHY_VALUES
+
+
 def _refuse_a_window(launch):
     async def windowless(self, *args, **kwargs):
         if kwargs.get("headless") is False:
@@ -160,10 +171,11 @@ def no_browser_window_on_the_desktop(ignore_the_developers_environment, monkeypa
     window shows for about half a second on every start (``hidden_target``). No
     test reaches LinkedIn, so Chromium's own headless mode costs nothing here.
     The switch is inherited by the processes tests start, and a headed launch in
-    this process fails instead of opening a window. CI keeps the real modes,
-    which the identity rows measure.
+    this process fails instead of opening a window. A child that asks for a
+    headed browser itself (``--login``, ``--no-headless``) is not covered. CI
+    keeps the real modes, which the identity rows measure.
     """
-    if sys.platform != "darwin" or os.environ.get("CI"):
+    if sys.platform != "darwin" or running_in_ci():
         return
     from patchright.async_api import BrowserType
 
