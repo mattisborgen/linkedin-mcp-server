@@ -1426,7 +1426,9 @@ class TestExtractSavedJobsPage:
             )
 
         navigate_to.assert_awaited_once_with("https://www.linkedin.com/jobs-tracker/")
-        scroll.assert_awaited_once_with(mock_page, pause_time=0.5, max_scrolls=5)
+        scroll.assert_awaited_once_with(
+            mock_page, pause_time=0.5, max_scrolls=5, pace=reader._session.pace
+        )
         mock_page.click.assert_not_called()
 
     async def test_a_saved_page_caps_its_own_references_at_twelve(self, mock_page):

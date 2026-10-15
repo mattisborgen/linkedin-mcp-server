@@ -255,6 +255,37 @@ class TestFeedScrollCeiling:
         page.assert_clean()
 
 
+class TestFeedScrollPacing:
+    async def test_every_wheel_waits_the_full_pause_first(self):
+        """Each wheel loads the next batch of posts, so it is paced like a page load."""
+        recorder = TraceRecorder(
+            "feed-scroll-pacing",
+            _COMMON_ALLOWED | {"response.body.start", "response.body.finish"},
+        )
+        clock = FakeClock(recorder)
+        page = _page(recorder).script("evaluate:root_content", _root("Feed content"))
+        page.script(
+            "mouse.wheel",
+            *[
+                TestFeedScrollCeiling._one_batch_per_wheel(page, index)
+                for index in range(2)
+            ],
+        )
+        session = PageSession(cast(Any, page), (3.0, 3.0))
+        reader = FeedReader(session, PageNavigator(session), PageContentReader(session))
+
+        async with boundaries(recorder, clock):
+            with recorder.context("extract_feed", "feed"):
+                await reader.extract_feed(num_posts=2)
+
+        kinds = [event["kind"] for event in recorder.events]
+        wheels = [index for index, kind in enumerate(kinds) if kind == "mouse.wheel"]
+        assert len(wheels) == 2
+        for index in wheels:
+            assert recorder.events[index - 1]["kind"] == "sleep"
+            assert recorder.events[index - 1]["seconds"] == 3.0
+
+
 class TestFeedScrollRecovery:
     """Response-read progress contracts inside the feed scroll loop."""
 

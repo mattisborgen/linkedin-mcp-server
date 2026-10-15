@@ -9,7 +9,6 @@ structural signal that holds in every UI language; the dates ("Connected on",
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
@@ -161,25 +160,26 @@ class NetworkReader:
         for _ in range(self._max_rounds):
             if count >= limit:
                 break
-            # Each scroll fetches the next batch, so it is paced like a short page load.
-            await self._session.pace(0.4)
-            await self._session.run_on_linkedin(_SCROLL_LISTS)
-            grown = await self._wait_for_growth(count)
+            grown = await self._scroll_for_more(count)
             if grown == count:
                 # One retry: the list may have moved while the first wait ran.
-                await self._session.run_on_linkedin(_SCROLL_LISTS)
-                grown = await self._wait_for_growth(count)
+                grown = await self._scroll_for_more(count)
                 if grown == count:
                     break
             count = grown
         return count
 
+    async def _scroll_for_more(self, count: int) -> int:
+        """Scroll once, paced like a page load, and wait for the list to grow."""
+        await self._session.pace()
+        await self._session.run_on_linkedin(_SCROLL_LISTS)
+        return await self._wait_for_growth(count)
+
     async def _wait_for_growth(self, previous: int) -> int:
         """Poll until the profile count passes *previous* or the settle time ends."""
-        loop = asyncio.get_running_loop()
-        deadline = loop.time() + self._settle_timeout
+        deadline = self._session.monotonic() + self._settle_timeout
         count = previous
-        while loop.time() < deadline:
+        while self._session.monotonic() < deadline:
             await self._session.delay(self._poll_interval)
             count = await self._count()
             if count > previous:

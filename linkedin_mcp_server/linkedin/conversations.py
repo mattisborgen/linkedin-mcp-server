@@ -313,6 +313,8 @@ class ConversationReader:
     ) -> None:
         """Scroll the largest scrollable region inside main when one exists."""
         for _ in range(attempts):
+            # Each scroll can load the next batch of conversations or messages.
+            await self._session.pace()
             await self._session.run_on_linkedin(
                 """({ position }) => {
                     const main = document.querySelector('main');

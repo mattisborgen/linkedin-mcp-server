@@ -541,7 +541,9 @@ class JobPageReader:
                     )
                 try:
                     moved = await scroll_job_sidebar(
-                        self._session.page, deadline=scroll_deadline
+                        self._session.page,
+                        deadline=scroll_deadline,
+                        pace=self._session.pace,
                     )
                 finally:
                     # Only what the scroll spent. Charging the whole page
@@ -735,7 +737,12 @@ class JobPageReader:
 
         await handle_modal_close(self._session.page)
         if main_found:
-            await scroll_to_bottom(self._session.page, pause_time=0.5, max_scrolls=5)
+            await scroll_to_bottom(
+                self._session.page,
+                pause_time=0.5,
+                max_scrolls=5,
+                pace=self._session.pace,
+            )
         else:
             # A picker served in place of the list keeps the list's address
             # and its title, so the route guard below sees an allowed page and

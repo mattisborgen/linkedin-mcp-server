@@ -44,7 +44,8 @@ class PageSession:
     """Immutable page adapter shared by every page workflow."""
 
     page: Page
-    # Bounds in seconds of the random pause before each page load; (0, 0) = none.
+    # Bounds in seconds of the random pause before each page load and each
+    # action that loads more; (0, 0) = none.
     page_pause: tuple[float, float] = (0.0, 0.0)
 
     def monotonic(self) -> float:
@@ -55,11 +56,17 @@ class PageSession:
         """Pause through the session delay boundary."""
         await asyncio.sleep(seconds)
 
-    async def pace(self, fraction: float = 1.0) -> None:
-        """Pause a random time within ``page_pause``, scaled by *fraction*."""
+    async def pace(self) -> None:
+        """Pause a random time within ``page_pause``.
+
+        Awaited before every page load and every action that makes LinkedIn
+        send more (a scroll or key press that loads the next batch, a "show
+        more" click, and the retry of either), always over the full range: a
+        batch request is as visible to LinkedIn as a page load.
+        """
         low, high = self.page_pause
         if high > 0:
-            await self.delay(random.uniform(low, high) * fraction)
+            await self.delay(random.uniform(low, high))
 
     async def run_on_linkedin(self, script: str, arg: Any = _NO_ARGUMENT) -> Any:
         """Run a page *script* only in a LinkedIn document, and answer its result.
@@ -115,6 +122,7 @@ class PageSession:
             self.page,
             pause_time=pause_time,
             max_scrolls=max_scrolls,
+            pace=self.pace,
         )
 
     async def scroll_job_sidebar(
@@ -133,4 +141,5 @@ class PageSession:
             min_budget=min_budget,
             max_scrolls=max_scrolls,
             deadline=deadline,
+            pace=self.pace,
         )

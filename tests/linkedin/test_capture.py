@@ -764,6 +764,62 @@ class TestActivityFeedExtraction:
 
         assert show_more.click.await_count == 2
 
+    async def test_every_show_more_click_waits_the_full_pause_first(self, mock_page):
+        """Each click loads the next batch of entries, so it is paced like a page load."""
+        mock_page.evaluate = AsyncMock(
+            return_value={"source": "root", "text": "text", "references": []}
+        )
+        mock_page.wait_for_function = AsyncMock()
+        log: list[object] = []
+
+        show_more = MagicMock()
+        show_more.count = AsyncMock(side_effect=[1, 1, 0])
+        show_more.is_visible = AsyncMock(return_value=True)
+        show_more.scroll_into_view_if_needed = AsyncMock()
+        show_more.click = AsyncMock(side_effect=lambda **_: log.append("click"))
+        show_more.first = show_more
+        held_in(show_more)
+        show_more.filter = MagicMock(return_value=show_more)
+        mock_page.locator = MagicMock(
+            side_effect=lambda selector: (
+                show_more
+                if selector == "main button"
+                else MagicMock(count=AsyncMock(return_value=0))
+            )
+        )
+        session = PageSession(mock_page, (3.0, 3.0))
+        capture = SectionCapture(
+            session, PageNavigator(session), PageContentReader(session)
+        )
+
+        async def sleep(seconds: float) -> None:
+            log.append(seconds)
+
+        with (
+            patch(
+                "linkedin_mcp_server.linkedin.session.scroll_to_bottom",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "linkedin_mcp_server.linkedin.session.detect_rate_limit",
+                new_callable=AsyncMock,
+            ),
+            patch(
+                "linkedin_mcp_server.linkedin.session.handle_modal_close",
+                new_callable=AsyncMock,
+                return_value=False,
+            ),
+            patch("linkedin_mcp_server.linkedin.session.asyncio.sleep", sleep),
+        ):
+            await capture._capture_once(
+                "https://www.linkedin.com/in/billgates/details/certifications/",
+                section_name="certifications",
+                plan=CapturePlan(CaptureMode.DETAILS),
+            )
+
+        # The page load first, then each click.
+        assert log == [3.0, 3.0, "click", 1.0, 3.0, "click", 1.0]
+
     async def test_details_page_show_more_respects_max_scrolls_budget(self, mock_page):
         """When 'Show more' never disappears, loop exits after max_scrolls clicks."""
         mock_page.evaluate = AsyncMock(

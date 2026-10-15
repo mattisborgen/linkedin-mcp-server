@@ -587,7 +587,10 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
         type=non_negative_float,
         default=None,
         metavar="SECONDS",
-        help="Shortest random pause before each LinkedIn page load (default: 0)",
+        help=(
+            "Shortest random pause before each LinkedIn page load and each "
+            "scroll or click that loads more (default: 0)"
+        ),
     )
     parser.add_argument(
         "--page-pause-max",
@@ -595,8 +598,8 @@ def load_from_args(config: AppConfig, argv: Sequence[str]) -> AppConfig:
         default=None,
         metavar="SECONDS",
         help=(
-            "Longest random pause before each LinkedIn page load (default: 0; "
-            "0 and 0 = no pause)"
+            "Longest random pause before each LinkedIn page load and each "
+            "scroll or click that loads more (default: 0; 0 and 0 = no pause)"
         ),
     )
 

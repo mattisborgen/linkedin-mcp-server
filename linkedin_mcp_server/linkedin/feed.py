@@ -230,6 +230,8 @@ class FeedReader:
             if count >= num_posts:
                 break
 
+            # Each wheel loads the next batch of posts.
+            await self._session.pace()
             await page.mouse.wheel(0, _WHEEL_DELTA)
 
             new_count = count

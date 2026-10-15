@@ -168,12 +168,15 @@ async def boundaries(
     async def scroll_body(*args: Any, **kwargs: Any) -> None:
         values = bind_effective(real_scroll_body, *args, **kwargs)
         values.pop("page")
+        # The session's pacing, which waits nothing at the default pause.
+        values.pop("pace")
         recorder.record("boundary.scroll_body", **values, actual_scrolls=2)
         clock.advance(values["pause_time"] * 2)
 
     async def scroll_sidebar(*args: Any, **kwargs: Any) -> bool:
         values = bind_effective(real_scroll_sidebar, *args, **kwargs)
         values.pop("page")
+        values.pop("pace")
         recorder.record(
             "boundary.scroll_sidebar", **values, actual_scrolls=2, moved=False
         )

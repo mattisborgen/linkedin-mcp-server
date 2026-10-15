@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import time
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import anyio
@@ -327,8 +328,17 @@ async def detect_rate_limit(page: Page) -> None:
         pass
 
 
+#: Awaited before each scroll that can load more, by a caller that paces its
+#: requests to LinkedIn (``PageSession.pace``).
+Pace = Callable[[], Awaitable[None]]
+
+
 async def scroll_to_bottom(
-    page: Page, pause_time: float = 1.0, max_scrolls: int = 10
+    page: Page,
+    pause_time: float = 1.0,
+    max_scrolls: int = 10,
+    *,
+    pace: Pace | None = None,
 ) -> None:
     """Scroll to the bottom of the page to trigger lazy loading.
 
@@ -336,8 +346,11 @@ async def scroll_to_bottom(
         page: Patchright page object
         pause_time: Time to pause between scrolls (seconds)
         max_scrolls: Maximum number of scroll attempts
+        pace: Awaited before each scroll
     """
     for i in range(max_scrolls):
+        if pace is not None:
+            await pace()
         previous_height = await page.evaluate("document.body.scrollHeight")
         await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
         await asyncio.sleep(pause_time)
@@ -355,6 +368,8 @@ async def scroll_job_sidebar(
     min_budget: float = 0.4,
     max_scrolls: int = 10,
     deadline: float = 12.0,
+    *,
+    pace: Pace | None = None,
 ) -> bool:
     """Scroll the job search sidebar until it stops producing cards.
 
@@ -410,6 +425,9 @@ async def scroll_job_sidebar(
             page still holding no card after 5s is throttled or empty, and
             waiting the full deadline for it would cost that again on every
             one of ``max_pages`` navigations.
+        pace: Awaited before each scroll, the confirmation scroll included.
+            Its pause is spent from ``deadline``, so a paced search scrolls
+            less rather than longer.
     """
     started = time.monotonic()
     if deadline <= 0:
@@ -492,6 +510,8 @@ async def scroll_job_sidebar(
             if scrolls >= max_scrolls:
                 capped_out = True
                 break
+            if pace is not None:
+                await pace()
             if time.monotonic() >= hard_deadline:
                 timed_out = True
                 break
@@ -506,6 +526,8 @@ async def scroll_job_sidebar(
             if not grew:
                 # One confirmation round at the full budget: a batch slower
                 # than the shrunken budget is not an empty rail.
+                if pace is not None:
+                    await pace()
                 await _rail_step(page, holder, scroll=True)
                 grew = await grew_since(before, settle_timeout)
             if not grew:

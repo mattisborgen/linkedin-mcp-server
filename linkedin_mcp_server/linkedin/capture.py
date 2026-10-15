@@ -424,6 +424,8 @@ class SectionCapture:
                     target = button.first
                     if not await target.is_visible():
                         break
+                    # Each click loads the next batch of entries.
+                    await self._session.pace()
                     async with linkedin_element(target, timeout=2000) as button:
                         await button.scroll_into_view_if_needed(timeout=2000)
                         await button.click(timeout=2000)

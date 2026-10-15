@@ -55,7 +55,9 @@ async def test_scroll_body_delegates_the_utility_defaults(mock_page, monkeypatch
 
     await session.scroll_body()
 
-    scroll.assert_awaited_once_with(mock_page, pause_time=1.0, max_scrolls=10)
+    scroll.assert_awaited_once_with(
+        mock_page, pause_time=1.0, max_scrolls=10, pace=session.pace
+    )
 
 
 async def test_scroll_sidebar_delegates_every_utility_default(mock_page, monkeypatch):
@@ -72,4 +74,28 @@ async def test_scroll_sidebar_delegates_every_utility_default(mock_page, monkeyp
         min_budget=0.4,
         max_scrolls=10,
         deadline=12.0,
+        pace=session.pace,
     )
+
+
+class TestPace:
+    async def test_draws_over_the_whole_configured_range(self, mock_page, monkeypatch):
+        # Both ends of the range are reachable, so no caller gets a shortened
+        # pause: the top of 2-4 seconds is 4 seconds, not a fraction of it.
+        sleep = AsyncMock()
+        monkeypatch.setattr(session_module.asyncio, "sleep", sleep)
+        session = PageSession(mock_page, (2.0, 4.0))
+
+        for end in (max, min):
+            monkeypatch.setattr(session_module.random, "uniform", end)
+            await session.pace()
+
+        assert [call.args for call in sleep.await_args_list] == [(4.0,), (2.0,)]
+
+    async def test_waits_nothing_by_default(self, mock_page, monkeypatch):
+        sleep = AsyncMock()
+        monkeypatch.setattr(session_module.asyncio, "sleep", sleep)
+
+        await PageSession(mock_page).pace()
+
+        sleep.assert_not_awaited()

@@ -1834,3 +1834,32 @@ class TestWaitForMainText:
             await reader._wait_for_main_text(log_context="Messaging inbox")
 
         assert "Messaging inbox content did not appear" in caplog.text
+
+
+class TestScrollPacing:
+    async def test_every_scroll_waits_the_full_pause_first(
+        self, mock_page, session_boundaries
+    ):
+        # Each scroll can load the next batch of conversations or messages, so
+        # it is paced like a page load.
+        log: list[Any] = []
+        session_boundaries.delay.side_effect = lambda seconds: log.append(seconds)
+
+        async def scroll(_expression: str, _arg: Any) -> bool:
+            log.append("scroll")
+            return True
+
+        mock_page.evaluate = AsyncMock(side_effect=scroll)
+        session = PageSession(mock_page, (3.0, 3.0))
+        reader = ConversationReader(
+            session,
+            PageNavigator(session),
+            PageContentReader(session),
+            ProfilePageReader(session, _no_message_target),
+        )
+
+        await reader._scroll_main_scrollable_region(
+            position="bottom", attempts=2, pause_time=0.5
+        )
+
+        assert log == [3.0, "scroll", 0.5, 3.0, "scroll", 0.5]

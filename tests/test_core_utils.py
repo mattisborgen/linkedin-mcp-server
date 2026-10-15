@@ -4,8 +4,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
+from linkedin_mcp_server.core import utils as utils_module
 from linkedin_mcp_server.core.exceptions import RateLimitError
-from linkedin_mcp_server.core.utils import detect_rate_limit, scroll_job_sidebar
+from linkedin_mcp_server.core.utils import (
+    detect_rate_limit,
+    scroll_job_sidebar,
+    scroll_to_bottom,
+)
 
 
 @pytest.fixture
@@ -164,3 +169,26 @@ class TestScrollDeadline:
                 await scroll_job_sidebar(page)
 
         holder.dispose.assert_awaited_once()
+
+
+class TestScrollToBottomPacing:
+    async def test_every_scroll_is_paced_first(self, mock_page, monkeypatch):
+        # Grows twice, then stays: three scrolls, the last one finding the end.
+        heights = iter([100, 200, 200, 300, 300, 300])
+        log: list[str] = []
+
+        async def evaluate(expression: str) -> int | None:
+            if expression.startswith("window.scrollTo"):
+                log.append("scroll")
+                return None
+            return next(heights)
+
+        async def pace() -> None:
+            log.append("pace")
+
+        mock_page.evaluate = evaluate
+        monkeypatch.setattr(utils_module.asyncio, "sleep", AsyncMock())
+
+        await scroll_to_bottom(mock_page, pause_time=0.5, max_scrolls=5, pace=pace)
+
+        assert log == ["pace", "scroll"] * 3

@@ -1217,3 +1217,46 @@ class TestRedesignedCards:
         )
 
         assert await job_ids(dom_page, scoped=True) == ["111", "222", "333"]
+
+
+async def count_scrolls(page) -> None:
+    """Count every ``scrollTop`` assignment, in the world the step runs in."""
+    await page.evaluate(
+        """() => {
+            const own = Object.getOwnPropertyDescriptor(
+                Element.prototype, 'scrollTop'
+            );
+            document.body.dataset.scrolls = '0';
+            Object.defineProperty(Element.prototype, 'scrollTop', {
+                configurable: true,
+                get() { return own.get.call(this); },
+                set(value) {
+                    const body = document.body;
+                    body.dataset.scrolls = String(Number(body.dataset.scrolls) + 1);
+                    own.set.call(this, value);
+                },
+            });
+        }"""
+    )
+
+
+async def scrolls_so_far(page) -> int:
+    return int(await page.evaluate("document.body.dataset.scrolls"))
+
+
+class TestPacing:
+    async def test_every_scroll_is_paced_first_the_confirmation_too(self, dom_page):
+        await dom_page.set_content(sidebar(total=15, batch=5, delays=[30]))
+        await count_scrolls(dom_page)
+        scrolls_at_each_pause: list[int] = []
+
+        async def pace() -> None:
+            scrolls_at_each_pause.append(await scrolls_so_far(dom_page))
+
+        await scroll_job_sidebar(dom_page, settle_timeout=0.6, pace=pace)
+
+        # At least a scroll that loads, one that does not, and its
+        # confirmation; each pause saw only the scrolls paced before it.
+        scrolls = await scrolls_so_far(dom_page)
+        assert scrolls >= 3
+        assert scrolls_at_each_pause == list(range(scrolls))

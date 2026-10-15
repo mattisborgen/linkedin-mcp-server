@@ -166,8 +166,8 @@ class BrowserConfig:
     browser_min_hold_seconds: float = DEFAULT_BROWSER_MIN_HOLD_SECONDS
     # Close an idle browser after this long; 0 = keep it until the process exits
     browser_idle_timeout_seconds: float = DEFAULT_BROWSER_IDLE_TIMEOUT_SECONDS
-    # Random pause before each LinkedIn page load, drawn between these bounds
-    # in seconds; 0 and 0 = no pause
+    # Random pause before each LinkedIn page load and each scroll or click that
+    # loads more, drawn between these bounds in seconds; 0 and 0 = no pause
     page_pause_min_seconds: float = 0.0
     page_pause_max_seconds: float = 0.0
     # Auto-import a LinkedIn session from a locally logged-in browser on the
