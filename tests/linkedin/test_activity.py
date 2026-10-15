@@ -15,19 +15,28 @@ from linkedin_mcp_server.linkedin import activity as activity_module
 from linkedin_mcp_server.linkedin import session as session_module
 from linkedin_mcp_server.linkedin.activity import (
     ActivityReader,
+    FeedOwner,
     activity_published_at,
 )
 from linkedin_mcp_server.linkedin.navigation import PageNavigator
 from linkedin_mcp_server.linkedin.session import PageSession
 
 NOW = datetime(2026, 10, 13, 12, 0, tzinfo=UTC)
+OWNER = "in:ada-lovelace"
+PAUSE = 3.0
 
 
-def _post(days_ago: float, text: str | None = None) -> dict[str, str]:
-    """A mounted post published *days_ago* before NOW."""
+def _post(
+    days_ago: float, text: str | None = None, *, author: str | None = OWNER
+) -> dict[str, Any]:
+    """A mounted post published *days_ago* before NOW, by the feed's owner."""
     milliseconds = int((NOW - timedelta(days=days_ago)).timestamp() * 1000)
     urn = f"urn:li:activity:{milliseconds << 22 | 99}"
-    return {"urn": urn, "text": text if text is not None else f"Post {days_ago}"}
+    return {
+        "urn": urn,
+        "text": text if text is not None else f"Post {days_ago}",
+        "author": author,
+    }
 
 
 class _Feed:
@@ -54,6 +63,7 @@ class _Feed:
         self.emptied = emptied
         self.ignored = set(ignored)
         self.url = "https://www.linkedin.com/in/ada-lovelace/recent-activity/all/"
+        self.log: list[Any] = []
 
     async def wait_for_function(self, expression: str, *, timeout: int) -> None:
         return None
@@ -80,6 +90,7 @@ class _Feed:
             async def press(self, key: str) -> None:
                 assert key == "End"
                 feed.presses += 1
+                feed.log.append("press")
                 if feed.presses not in feed.ignored and feed.loaded < len(feed.batches):
                     feed.loaded += 1
 
@@ -95,9 +106,10 @@ class _Feed:
 @pytest.fixture(autouse=True)
 def page_boundaries(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     """A clock that moves only when the reader waits, and a fixed today."""
-    clock = SimpleNamespace(now=0.0)
+    clock = SimpleNamespace(now=0.0, sleeps=[])
 
     async def sleep(seconds: float) -> None:
+        clock.sleeps.append(seconds)
         clock.now += seconds
 
     monkeypatch.setattr(session_module.asyncio, "sleep", sleep)
@@ -110,8 +122,10 @@ def page_boundaries(monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     return clock
 
 
-def _reader(feed: _Feed) -> tuple[ActivityReader, AsyncMock, AsyncMock]:
-    session = PageSession(cast(Page, feed))
+def _reader(
+    feed: _Feed, *, pause: tuple[float, float] = (0.0, 0.0)
+) -> tuple[ActivityReader, AsyncMock, AsyncMock]:
+    session = PageSession(cast(Page, feed), pause)
     navigate = AsyncMock()
     navigator = cast(PageNavigator, SimpleNamespace(_navigate_to_page=navigate))
     resolve = AsyncMock(return_value="ada-lovelace")
@@ -195,6 +209,109 @@ class TestWhenTheReadStops:
         assert feed.presses == 0
         assert result["posts"] == []
         assert result["section_errors"]["posts"]["error_type"] == "no_posts_found"
+
+
+class TestPacing:
+    async def test_every_press_waits_the_full_pause_the_retry_too(
+        self, monkeypatch: pytest.MonkeyPatch, page_boundaries: SimpleNamespace
+    ):
+        # One batch, then nothing: a press that loads, one that does not, and
+        # the retry after it.
+        feed = _Feed([[_post(1)], [_post(2)]])
+
+        async def sleep(seconds: float) -> None:
+            feed.log.append(("sleep", seconds))
+            page_boundaries.now += seconds
+
+        monkeypatch.setattr(session_module.asyncio, "sleep", sleep)
+        reader, _navigate, _resolve = _reader(feed, pause=(PAUSE, PAUSE))
+
+        await reader.get_my_posts()
+
+        assert feed.presses == 3
+        for index, event in enumerate(feed.log):
+            if event == "press":
+                assert feed.log[index - 1] == ("sleep", PAUSE), feed.log
+
+
+class TestWhosePostsAreKept:
+    async def test_a_repost_of_someone_elses_post_is_left_out(self):
+        # Before the owner's older post in the feed, and still no place taken:
+        # the limit counts the owner's posts only.
+        newest, older = _post(1), _post(3)
+        repost = _post(2, "Charles Babbage\nThe engine", author="in:charles-babbage")
+        reader, _navigate, _resolve = _reader(_Feed([[newest, repost, older]]))
+
+        result = await reader.get_my_posts(limit=2)
+
+        assert _urns(result) == [newest["urn"], older["urn"]]
+
+    async def test_a_post_with_no_author_link_read_is_kept(self):
+        post = _post(1, author=None)
+        reader, _navigate, _resolve = _reader(_Feed([[post]]))
+
+        result = await reader.get_my_posts()
+
+        assert _urns(result) == [post["urn"]]
+
+    async def test_on_a_company_page_a_members_post_is_left_out(self):
+        launch = _post(1, author="company:acme")
+        shared = _post(2, author="in:ada-lovelace")
+        partner = _post(3, author="company:analytical-engine")
+        reader, _navigate, _resolve = _reader(_Feed([[launch, shared, partner]]))
+
+        result = await reader.get_my_posts("acme")
+
+        assert _urns(result) == [launch["urn"]]
+
+    @pytest.mark.parametrize(
+        ("owner", "author", "wrote"),
+        [
+            (FeedOwner("in", "ada-lovelace"), "in:ada-lovelace", True),
+            (FeedOwner("in", "Ada-Lovelace"), "in:ada-lovelace", True),
+            (FeedOwner("in", "ada-lovelace"), "in:charles-babbage", False),
+            (FeedOwner("in", "ada-lovelace"), "company:acme", False),
+            # A member id names an account a slug may also name.
+            (FeedOwner("in", "ada-lovelace"), "in:acoaab1234", True),
+            (FeedOwner("in", None), "in:charles-babbage", True),
+            (FeedOwner("in", None), "company:acme", False),
+            (FeedOwner("company", "acme"), "company:acme", True),
+            (FeedOwner("company", "acme"), "company:12345", True),
+            (FeedOwner("company", "acme"), "company:globex", False),
+            (FeedOwner("company", "acme"), "in:ada-lovelace", False),
+            (FeedOwner("company", "acme"), None, True),
+        ],
+    )
+    def test_who_counts_as_the_owner(self, owner: FeedOwner, author, wrote: bool):
+        assert owner.wrote(author) is wrote
+
+
+class TestPinnedPosts:
+    """A pinned post sits at the top of the feed whatever its age."""
+
+    async def test_one_mounted_alone_and_out_of_range_does_not_end_the_read(self):
+        pinned, newer = _post(200), [_post(1), _post(2)]
+        reader, _navigate, _resolve = _reader(_Feed([[pinned], newer]))
+
+        result = await reader.get_my_posts(since_days=30)
+
+        assert _urns(result) == [post["urn"] for post in newer]
+
+    async def test_one_in_range_does_not_take_the_place_of_a_newer_post(self):
+        pinned, newest, next_newest = _post(10), _post(1), _post(2)
+        reader, _navigate, _resolve = _reader(_Feed([[pinned], [newest, next_newest]]))
+
+        result = await reader.get_my_posts(limit=1)
+
+        assert _urns(result) == [newest["urn"]]
+
+    async def test_one_in_range_is_placed_by_its_date(self):
+        pinned, first, second, third = _post(1.5), _post(1), _post(2), _post(3)
+        reader, _navigate, _resolve = _reader(_Feed([[pinned, first, second], [third]]))
+
+        result = await reader.get_my_posts(limit=3)
+
+        assert _urns(result) == [first["urn"], pinned["urn"], second["urn"]]
 
 
 class TestWhatIsKept:

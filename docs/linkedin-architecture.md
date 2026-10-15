@@ -16,7 +16,7 @@ a page-owning collaborator.
 | Module | Canonical public owners | Source classification |
 | --- | --- | --- |
 | `__init__` | _(no public definitions)_ | `browser-free` |
-| `activity` | `ActivityReader`, `COMPANY_POSTS_SUFFIX`, `PERSONAL_SOURCE`, `ResolveOwnUsername`, `activity_published_at()`, `normalize_posts_source()` | `page-owning` |
+| `activity` | `ActivityReader`, `COMPANY_POSTS_SUFFIX`, `FeedOwner`, `PERSONAL_SOURCE`, `ResolveOwnUsername`, `activity_published_at()`, `normalize_posts_source()` | `page-owning` |
 | `capture` | `CaptureMode`, `CapturePlan`, `OverlayRootNotFoundError`, `RATE_LIMIT_RETRY_DELAY`, `SectionCapture`, `capture_plan_for_url()` | `page-owning` |
 | `company` | `CompanyReader` | `browser-free` |
 | `connection` | `ActionSignals`, `ConnectionState`, `detect_connection_state()` | `browser-free` |

@@ -132,6 +132,10 @@ def register_network_tools(
         from the text. Every entry in posts is {urn, url, published_at, text},
         with published_at the UTC publish time decoded from the URN.
 
+        Only posts the user, or the company page, wrote are listed: a repost of
+        someone else's post is left out, and a pinned post takes its place by
+        publish time.
+
         Args:
             ctx: FastMCP context for progress reporting
             source: "personal" (default) for the authenticated user's own posts,

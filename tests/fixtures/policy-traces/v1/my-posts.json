@@ -151,7 +151,7 @@
       "call": "get_my_posts",
       "kind": "evaluate",
       "operation": "activity_posts",
-      "program_digest": "9b6ef5618eee",
+      "program_digest": "6a68e45e4498",
       "section": "posts"
     },
     {
@@ -201,7 +201,7 @@
       "call": "get_my_posts",
       "kind": "evaluate",
       "operation": "activity_posts",
-      "program_digest": "9b6ef5618eee",
+      "program_digest": "6a68e45e4498",
       "section": "posts"
     }
   ],
